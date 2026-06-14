@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - AeroTravel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .results-container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 40px;
+            background: rgba(30, 30, 47, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .results-title {
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .criteria-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 30px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .criteria-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .criteria-label {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .criteria-val {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: 500;
+        }
+        .back-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="app-logo">
+                <div class="logo-icon"><i class="fa-solid fa-paper-plane"></i></div>
+                <span class="logo-text">Aero<span>Travel</span></span>
+            </a>
+            <div class="header-actions">
+                <a href="/" class="login-btn" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i> Home</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="results-container">
+        <div style="font-size: 4rem; color: #10b981; margin-bottom: 20px;">
+            <i class="fa-regular fa-circle-check"></i>
+        </div>
+        <h2 class="results-title">Flight Search Received Successfully!</h2>
+        <p style="color:#a0aec0;">We are preparing your flights search results. In the next steps, we will connect this to a real Flight Search API.</p>
+        
+        <div class="criteria-card">
+            <div class="criteria-item">
+                <span class="criteria-label">Trip Type</span>
+                <span class="criteria-val" th:text="${tripType}">One Way</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">From</span>
+                <span class="criteria-val" th:text="${from}">Mumbai (BOM)</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">To</span>
+                <span class="criteria-val" th:text="${to}">New Delhi (DEL)</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Departure</span>
+                <span class="criteria-val" th:text="${departure}">2026-06-15</span>
+            </div>
+            <div class="criteria-item" th:if="${returnDate != null and returnDate != ''}">
+                <span class="criteria-label">Return</span>
+                <span class="criteria-val" th:text="${returnDate}">N/A</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Travellers</span>
+                <span class="criteria-val" th:text="${travellers}">1</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Class</span>
+                <span class="criteria-val" th:text="${classType}">Economy</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Fare Type</span>
+                <span class="criteria-val" th:text="${fareType}">Regular</span>
+            </div>
+        </div>
+
+        <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Modify Search</a>
+    </div>
+</body>
+</html>

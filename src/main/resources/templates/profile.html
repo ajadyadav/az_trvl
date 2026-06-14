@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - AeroTravel</title>
+    <!-- Google Font: Outfit & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="profile-dashboard-page">
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="app-logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+                <span class="logo-text">Aero<span>Travel</span></span>
+            </a>
+
+            <nav class="main-nav">
+                <a href="/?tab=flights" class="nav-item"><i class="fa-solid fa-plane"></i> Flights</a>
+                <a href="/?tab=hotels" class="nav-item"><i class="fa-solid fa-hotel"></i> Hotels</a>
+            </nav>
+
+            <div class="header-actions">
+                <!-- Logged In State -->
+                <div class="user-profile-dropdown" id="nav-user-profile" style="position: relative;">
+                    <div class="user-profile-trigger" id="user-profile-trigger" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;" id="user-initial">U</div>
+                        <span id="user-name-display" style="font-weight: 500; font-size: 0.95rem;">User</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; opacity: 0.7; transition: var(--transition-fast);" id="user-profile-arrow"></i>
+                    </div>
+                    <div class="profile-dropdown-menu" id="profile-dropdown">
+                        <a href="/profile?tab=profile" class="dropdown-item active"><i class="fa-regular fa-user"></i> Manage Profile</a>
+                        <a href="/profile?tab=bookings" class="dropdown-item"><i class="fa-solid fa-ticket"></i> My Bookings</a>
+                        <a href="/profile?tab=password" class="dropdown-item"><i class="fa-solid fa-lock"></i> Change Password</a>
+                        <div class="dropdown-divider"></div>
+                        <button id="logout-btn" class="dropdown-item logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Profile Dashboard Grid -->
+    <main class="profile-dashboard-container">
+        <!-- Left Sidebar Navigation -->
+        <aside class="profile-sidebar-card">
+            <div class="profile-summary">
+                <div class="profile-avatar" id="sidebar-avatar">U</div>
+                <h2 class="profile-name" id="sidebar-name">Loading...</h2>
+                <p class="profile-email" id="sidebar-email">Please wait</p>
+                <span class="profile-badge">Customer</span>
+            </div>
+            
+            <nav class="profile-sidebar-menu">
+                <button class="sidebar-menu-btn active" data-tab="profile" onclick="switchProfileTab('profile')">
+                    <i class="fa-regular fa-user"></i> Manage Profile
+                </button>
+                <button class="sidebar-menu-btn" data-tab="bookings" onclick="switchProfileTab('bookings')">
+                    <i class="fa-solid fa-ticket"></i> My Bookings
+                </button>
+                <button class="sidebar-menu-btn" data-tab="password" onclick="switchProfileTab('password')">
+                    <i class="fa-solid fa-lock"></i> Change Password
+                </button>
+                <div class="menu-divider"></div>
+                <button class="sidebar-menu-btn logout-link" id="sidebar-logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Right Content Panels -->
+        <section class="profile-content-area">
+            
+            <!-- Tab 1: Manage Profile -->
+            <div class="profile-tab-panel active" id="panel-profile">
+                <div class="panel-header">
+                    <h2>Manage Profile</h2>
+                    <p>Update your personal information to streamline your future bookings.</p>
+                </div>
+                
+                <form id="profile-details-form" class="profile-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="profile-name-input">Full Name</label>
+                            <div class="input-container">
+                                <i class="fa-regular fa-user"></i>
+                                <input type="text" id="profile-name-input" placeholder="Your Full Name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-phone-input">Phone Number</label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="tel" id="profile-phone-input" placeholder="e.g. +91 9876543210">
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="profile-email-input">Email Address</label>
+                            <div class="input-container disabled">
+                                <i class="fa-regular fa-envelope"></i>
+                                <input type="email" id="profile-email-input" readonly>
+                            </div>
+                            <span class="field-hint"><i class="fa-solid fa-circle-info"></i> Your login email address cannot be changed directly.</span>
+                        </div>
+                    </div>
+
+                    <div id="profile-alert" class="dashboard-alert" style="display: none;"></div>
+
+                    <button type="submit" class="save-profile-btn" id="save-profile-btn">
+                        <span class="btn-text">Save Changes</span>
+                        <i class="fa-solid fa-spinner fa-spin loader-icon" style="display: none;"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab 2: My Bookings -->
+            <div class="profile-tab-panel" id="panel-bookings">
+                <div class="panel-header flex-header">
+                    <div>
+                        <h2>My Bookings</h2>
+                        <p>Track all your flight and hotel itineraries.</p>
+                    </div>
+                    <!-- Booking Type Selector (Flights vs Hotels) -->
+                    <div class="booking-category-selector">
+                        <button class="cat-btn active" data-booking-type="flights" onclick="switchBookingCategory('flights')">
+                            <i class="fa-solid fa-plane"></i> Flights
+                        </button>
+                        <button class="cat-btn" data-booking-type="hotels" onclick="switchBookingCategory('hotels')">
+                            <i class="fa-solid fa-hotel"></i> Hotels
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sub-filter (Upcoming vs Completed) -->
+                <div class="booking-time-filter">
+                    <button class="time-btn active" data-booking-time="upcoming" onclick="filterBookingsTime('upcoming')">Upcoming</button>
+                    <button class="time-btn" data-booking-time="completed" onclick="filterBookingsTime('completed')">Completed</button>
+                </div>
+
+                <!-- Bookings Listings -->
+                <div class="bookings-list-container">
+                    
+                    <!-- Flights Bookings Section -->
+                    <div class="bookings-sub-list active" id="list-flights">
+                        <!-- Flight cards will be generated by JS -->
+                        <div class="empty-state" style="display: none;">
+                            <i class="fa-solid fa-plane-slash"></i>
+                            <h3>No flight bookings found</h3>
+                            <p>You haven't booked any flights in this category yet.</p>
+                            <a href="/?tab=flights" class="book-now-btn">Book Flight Now</a>
+                        </div>
+                    </div>
+
+                    <!-- Hotels Bookings Section -->
+                    <div class="bookings-sub-list" id="list-hotels">
+                        <!-- Hotel cards will be generated by JS -->
+                        <div class="empty-state" style="display: none;">
+                            <i class="fa-solid fa-hotel"></i>
+                            <h3>No hotel bookings found</h3>
+                            <p>You haven't booked any hotels in this category yet.</p>
+                            <a href="/?tab=hotels" class="book-now-btn">Book Hotel Now</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 3: Change Password -->
+            <div class="profile-tab-panel" id="panel-password">
+                <div class="panel-header">
+                    <h2>Change Password</h2>
+                    <p>Update your password to keep your account secure.</p>
+                </div>
+
+                <form id="change-password-form" class="profile-form">
+                    <div class="form-grid single-col">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <div class="input-with-toggle">
+                                <i class="fa-solid fa-shield"></i>
+                                <input type="password" id="current-password" placeholder="Enter current password" required>
+                                <button type="button" class="toggle-pass-visibility" onclick="togglePasswordVisibility('current-password')">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <div class="input-with-toggle">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="new-password" placeholder="Min 6 characters" required minlength="6">
+                                <button type="button" class="toggle-pass-visibility" onclick="togglePasswordVisibility('new-password')">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-new-password">Confirm New Password</label>
+                            <div class="input-with-toggle">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <input type="password" id="confirm-new-password" placeholder="Re-enter new password" required>
+                                <button type="button" class="toggle-pass-visibility" onclick="togglePasswordVisibility('confirm-new-password')">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="password-alert" class="dashboard-alert" style="display: none;"></div>
+
+                    <button type="submit" class="save-profile-btn" id="change-password-btn">
+                        <span class="btn-text">Update Password</span>
+                        <i class="fa-solid fa-spinner fa-spin loader-icon" style="display: none;"></i>
+                    </button>
+                </form>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Global Header Interaction (Same as index.html dropdown) -->
+    <script type="module">
+        import { auth, onAuthStateChanged, signOut } from '/js/firebase-config.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropdownTrigger = document.getElementById('user-profile-trigger');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            const profileArrow = document.getElementById('user-profile-arrow');
+            const logoutBtn = document.getElementById('logout-btn');
+            const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const displayName = user.displayName || 'User';
+                    const userInitial = document.getElementById('user-initial');
+                    const sidebarAvatar = document.getElementById('sidebar-avatar');
+                    
+                    document.getElementById('user-name-display').textContent = displayName;
+                    
+                    if (userInitial) userInitial.textContent = displayName.charAt(0).toUpperCase();
+                    if (sidebarAvatar) sidebarAvatar.textContent = displayName.charAt(0).toUpperCase();
+                } else {
+                    // Redirect to login if user is logged out
+                    window.location.href = '/auth';
+                }
+            });
+
+            // Toggle Dropdown Menu
+            if (dropdownTrigger && profileDropdown) {
+                dropdownTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = profileDropdown.classList.toggle('active');
+                    if (profileArrow) {
+                        profileArrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+                    }
+                });
+
+                document.addEventListener('click', () => {
+                    profileDropdown.classList.remove('active');
+                    if (profileArrow) {
+                        profileArrow.style.transform = 'rotate(0deg)';
+                    }
+                });
+            }
+
+            const handleSignOut = async () => {
+                try {
+                    await signOut(auth);
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                }
+            };
+
+            if (logoutBtn) logoutBtn.addEventListener('click', handleSignOut);
+            if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', handleSignOut);
+        });
+
+        // Dynamic visibility functions
+        window.togglePasswordVisibility = function(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
+    </script>
+
+    <!-- Profile Operations JS -->
+    <script type="module" src="/js/profile.js"></script>
+</body>
+</html>

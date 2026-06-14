@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroTravel - Flights & Hotels Booking</title>
+    <!-- Google Font: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="app-logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+                <span class="logo-text">Aero<span>Travel</span></span>
+            </a>
+
+            <nav class="main-nav">
+                <a href="#" class="nav-item active" data-target="flights"><i class="fa-solid fa-plane"></i> Flights</a>
+                <a href="#" class="nav-item" data-target="hotels"><i class="fa-solid fa-hotel"></i> Hotels</a>
+            </nav>
+
+            <div class="header-actions">
+                <div class="currency-selector">
+                    <img src="https://flagcdn.com/w20/in.png" alt="India flag" class="flag-img">
+                    <span>IND | INR</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <!-- Logged Out State -->
+                <a href="/auth" class="login-btn" id="nav-login-btn"><i class="fa-regular fa-user"></i> Login / Register</a>
+                
+                <!-- Logged In State (Hidden by default) -->
+                <div class="user-profile-dropdown" id="nav-user-profile" style="display: none;">
+                    <div class="user-profile-trigger" id="user-profile-trigger" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;" id="user-initial">U</div>
+                        <span id="user-name-display" style="font-weight: 500; font-size: 0.95rem;">User</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; opacity: 0.7; transition: var(--transition-fast);" id="user-profile-arrow"></i>
+                    </div>
+                    <div class="profile-dropdown-menu" id="profile-dropdown">
+                        <a href="/profile?tab=profile" class="dropdown-item"><i class="fa-regular fa-user"></i> Manage Profile</a>
+                        <a href="/profile?tab=bookings" class="dropdown-item"><i class="fa-solid fa-ticket"></i> My Bookings</a>
+                        <a href="/profile?tab=password" class="dropdown-item"><i class="fa-solid fa-lock"></i> Change Password</a>
+                        <div class="dropdown-divider"></div>
+                        <button id="logout-btn" class="dropdown-item logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero / Search Section -->
+    <section class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="hero-container">
+            <div class="hero-badge">
+                <i class="fa-solid fa-sparkles"></i> Best Prices Guaranteed
+            </div>
+            <h1 class="hero-title">Where is your next adventure?</h1>
+            <p class="hero-subtitle">Discover flights and hotels around the globe with seamless booking experiences.</p>
+
+            <!-- Search Card Container -->
+            <div class="search-card">
+                <!-- Search Type Tabs (Flights vs Hotels) -->
+                <div class="search-tabs">
+                    <button class="tab-btn active" onclick="switchSearchTab('flights')">
+                        <i class="fa-solid fa-plane-departure"></i> Book Flights
+                    </button>
+                    <button class="tab-btn" onclick="switchSearchTab('hotels')">
+                        <i class="fa-solid fa-hotel"></i> Book Hotels
+                    </button>
+                </div>
+
+                <!-- Flight Search Form -->
+                <form id="flights-form" action="/search/flights" method="post" class="search-form active">
+                    <!-- Trip Type Radio Selectors -->
+                    <div class="trip-types">
+                        <label class="trip-type-label">
+                            <input type="radio" name="tripType" value="oneway" checked onclick="toggleTripType('oneway')">
+                            <span class="custom-radio"></span>
+                            One Way
+                        </label>
+                        <label class="trip-type-label">
+                            <input type="radio" name="tripType" value="roundtrip" onclick="toggleTripType('roundtrip')">
+                            <span class="custom-radio"></span>
+                            Round Trip
+                        </label>
+                        <label class="trip-type-label">
+                            <input type="radio" name="tripType" value="multicity" onclick="toggleTripType('multicity')">
+                            <span class="custom-radio"></span>
+                            Multi City
+                        </label>
+                    </div>
+
+                    <!-- Main Search Fields -->
+                    <div class="search-fields-grid">
+                        <!-- Origin -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="field-inputs">
+                                <label for="flight-from">From</label>
+                                <input type="text" id="flight-from" name="from" placeholder="Source City" value="Mumbai (BOM)" required autocomplete="off">
+                                <span class="airport-code">BOM</span>
+                            </div>
+                        </div>
+
+                        <!-- Swap Button -->
+                        <div class="swap-btn-container">
+                            <button type="button" class="swap-btn" onclick="swapLocations()" title="Swap Origin & Destination">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+
+                        <!-- Destination -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-location-crosshairs"></i></span>
+                            <div class="field-inputs">
+                                <label for="flight-to">To</label>
+                                <input type="text" id="flight-to" name="to" placeholder="Destination City" value="New Delhi (DEL)" required autocomplete="off">
+                                <span class="airport-code">DEL</span>
+                            </div>
+                        </div>
+
+                        <!-- Departure Date -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-calendar-day"></i></span>
+                            <div class="field-inputs">
+                                <label for="departure">Departure</label>
+                                <input type="date" id="departure" name="departure" required>
+                            </div>
+                        </div>
+
+                        <!-- Return Date -->
+                        <div class="search-field-group disabled" id="return-date-group">
+                            <span class="field-icon"><i class="fa-solid fa-calendar-week"></i></span>
+                            <div class="field-inputs">
+                                <label for="returnDate" id="return-label">Return</label>
+                                <input type="date" id="returnDate" name="returnDate" disabled placeholder="Select Return">
+                            </div>
+                        </div>
+
+                        <!-- Travellers & Class -->
+                        <div class="search-field-group dropdown-trigger" onclick="toggleTravelerPopup(event)">
+                            <span class="field-icon"><i class="fa-solid fa-user-group"></i></span>
+                            <div class="field-inputs">
+                                <label>Travellers & Class</label>
+                                <span class="selector-display" id="travellers-display">1 Traveller, Economy</span>
+                                <input type="hidden" name="travellers" id="travellers-count" value="1">
+                                <input type="hidden" name="classType" id="class-type" value="Economy">
+                            </div>
+                            
+                            <!-- Traveler Selection Dropdown Panel -->
+                            <div class="traveler-dropdown" id="traveler-popup" onclick="event.stopPropagation()">
+                                <div class="dropdown-section">
+                                    <div class="passenger-type">
+                                        <div>
+                                            <span class="type-name">Adults</span>
+                                            <span class="type-desc">12+ years</span>
+                                        </div>
+                                        <div class="qty-counter">
+                                            <button type="button" onclick="adjustCount('adults', -1)">-</button>
+                                            <span id="qty-adults">1</span>
+                                            <button type="button" onclick="adjustCount('adults', 1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="passenger-type">
+                                        <div>
+                                            <span class="type-name">Children</span>
+                                            <span class="type-desc">2-12 years</span>
+                                        </div>
+                                        <div class="qty-counter">
+                                            <button type="button" onclick="adjustCount('children', -1)">-</button>
+                                            <span id="qty-children">0</span>
+                                            <button type="button" onclick="adjustCount('children', 1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="passenger-type">
+                                        <div>
+                                            <span class="type-name">Infants</span>
+                                            <span class="type-desc">Under 2 years</span>
+                                        </div>
+                                        <div class="qty-counter">
+                                            <button type="button" onclick="adjustCount('infants', -1)">-</button>
+                                            <span id="qty-infants">0</span>
+                                            <button type="button" onclick="adjustCount('infants', 1)">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dropdown-section border-top">
+                                    <span class="section-title">Travel Class</span>
+                                    <div class="class-choices">
+                                        <label class="class-choice">
+                                            <input type="radio" name="classRadio" value="Economy" checked onclick="selectClass('Economy')">
+                                            <span>Economy</span>
+                                        </label>
+                                        <label class="class-choice">
+                                            <input type="radio" name="classRadio" value="Premium Economy" onclick="selectClass('Premium Economy')">
+                                            <span>Premium Economy</span>
+                                        </label>
+                                        <label class="class-choice">
+                                            <input type="radio" name="classRadio" value="Business" onclick="selectClass('Business')">
+                                            <span>Business</span>
+                                        </label>
+                                        <label class="class-choice">
+                                            <input type="radio" name="classRadio" value="First Class" onclick="selectClass('First Class')">
+                                            <span>First Class</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="apply-btn" onclick="applyTravelerInfo()">Apply Changes</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Fares Row -->
+                    <div class="search-extras">
+                        <div class="special-fares">
+                            <span class="section-tag">Special Fares:</span>
+                            <label class="fare-checkbox">
+                                <input type="radio" name="fareType" value="regular" checked>
+                                <span>Regular Fares</span>
+                            </label>
+                            <label class="fare-checkbox">
+                                <input type="radio" name="fareType" value="student">
+                                <span>Student Fare</span>
+                            </label>
+                            <label class="fare-checkbox">
+                                <input type="radio" name="fareType" value="senior">
+                                <span>Senior Citizen</span>
+                            </label>
+                            <label class="fare-checkbox">
+                                <input type="radio" name="fareType" value="defence">
+                                <span>Defence Force</span>
+                            </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="search-btn">
+                            Search Flights <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Hotel Search Form -->
+                <form id="hotels-form" action="/search/hotels" method="post" class="search-form">
+                    <div class="search-fields-grid hotels-grid">
+                        <!-- City/Destination -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-city"></i></span>
+                            <div class="field-inputs">
+                                <label for="hotel-city">Where are you going?</label>
+                                <input type="text" id="hotel-city" name="city" placeholder="Destination, City, or Hotel Name" value="New Delhi, India" required autocomplete="off">
+                            </div>
+                        </div>
+
+                        <!-- Check-In Date -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                            <div class="field-inputs">
+                                <label for="checkIn">Check-In</label>
+                                <input type="date" id="checkIn" name="checkIn" required>
+                            </div>
+                        </div>
+
+                        <!-- Check-Out Date -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-calendar-day"></i></span>
+                            <div class="field-inputs">
+                                <label for="checkOut">Check-Out</label>
+                                <input type="date" id="checkOut" name="checkOut" required>
+                            </div>
+                        </div>
+
+                        <!-- Rooms & Guests -->
+                        <div class="search-field-group">
+                            <span class="field-icon"><i class="fa-solid fa-people-roof"></i></span>
+                            <div class="field-inputs">
+                                <label for="guests">Guests & Rooms</label>
+                                <input type="text" id="guests" name="guests" value="2 Guests, 1 Room" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="search-extras justify-end">
+                        <button type="submit" class="search-btn hotel-search-btn">
+                            Search Hotels <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Links list / Sub Categories row -->
+            <div class="sub-categories-row">
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-graduation-cap"></i> Academy</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-earth-americas"></i> Study Abroad</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-mosque"></i> Umrah</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-address-card"></i> Passport Help</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-plane-up"></i> Charters</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-boxes-packing"></i> Cargo</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-train"></i> IRCTC Agent</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-handshake"></i> MICE</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-briefcase"></i> Corporate</a>
+                <a href="#" class="sub-cat-item"><i class="fa-solid fa-coins"></i> Forex</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Exclusive Deals Section -->
+    <section class="deals-section">
+        <div class="section-container">
+            <div class="deals-header">
+                <div>
+                    <span class="section-tag">Special Offers</span>
+                    <h2 class="section-title-large">Exclusive Deals For You</h2>
+                </div>
+                <div class="deals-tabs">
+                    <button class="deal-tab active" onclick="filterDeals('all')">All Deals</button>
+                    <button class="deal-tab" onclick="filterDeals('flights')">Flights</button>
+                    <button class="deal-tab" onclick="filterDeals('hotels')">Hotels</button>
+                </div>
+            </div>
+
+            <div class="deals-grid">
+                <!-- Deal Card 1 -->
+                <div class="deal-card card-flights" data-category="flights">
+                    <div class="card-image-bg bg-flight-1">
+                        <div class="card-badge">Flight Discount</div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-partner"><i class="fa-solid fa-plane-departure"></i> International Flights</span>
+                        <h3 class="card-deal-title">Fly Business Class for Less!</h3>
+                        <p class="card-description">Experience premium comfort with flatbeds, gourmet meals, and airport lounge access. Get up to 20% off.</p>
+                        <div class="card-footer">
+                            <span class="card-code">Promo: <strong>AEROBIZ</strong></span>
+                            <a href="#" class="card-cta">Book Now <i class="fa-solid fa-chevron-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deal Card 2 -->
+                <div class="deal-card card-hotels" data-category="hotels">
+                    <div class="card-image-bg bg-hotel-1">
+                        <div class="card-badge">Hotel Offer</div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-partner"><i class="fa-solid fa-hotel"></i> Luxury Resorts</span>
+                        <h3 class="card-deal-title">Monsoon Escape: Stay 3 Pay 2</h3>
+                        <p class="card-description">Book a 3-night stay at participating luxury resort properties and get the 3rd night absolutely free.</p>
+                        <div class="card-footer">
+                            <span class="card-code">Promo: <strong>MONSOON</strong></span>
+                            <a href="#" class="card-cta">View Resorts <i class="fa-solid fa-chevron-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Deal Card 4 -->
+                <div class="deal-card card-flights" data-category="flights">
+                    <div class="card-image-bg bg-bank-1">
+                        <div class="card-badge">Partner Offer</div>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-partner"><i class="fa-regular fa-credit-card"></i> HDFC Bank Cards</span>
+                        <h3 class="card-deal-title">Up to 15% Instant Discount</h3>
+                        <p class="card-description">Use your HDFC Bank Credit or Debit Card to book flights or hotels and save up to ₹5,000 instantly.</p>
+                        <div class="card-footer">
+                            <span class="card-code">Promo: <strong>HDFCSAVE</strong></span>
+                            <a href="#" class="card-cta">Claim Offer <i class="fa-solid fa-chevron-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us -->
+    <section class="features-section">
+        <div class="section-container">
+            <h2 class="section-title-center">Why Book With AeroTravel?</h2>
+            <p class="section-subtitle-center">We provide the most robust booking infrastructure with exceptional service.</p>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h3>Secure Booking</h3>
+                    <p>Your transaction is 100% secure with top-tier PCI-DSS compliance and encryption technology.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+                    <h3>24/7 Support</h3>
+                    <p>Our dedicated travel experts are always ready to assist you at any stage of your journey.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fa-solid fa-ticket"></i></div>
+                    <h3>Easy Cancellations</h3>
+                    <p>Get instant refunds and easy self-serve cancellation and rescheduling policies.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fa-solid fa-percent"></i></div>
+                    <h3>No Hidden Fees</h3>
+                    <p>What you see is what you pay. Transparent pricing with clear tax and surcharge breakdowns.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-main-info">
+                <a href="/" class="app-logo">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </div>
+                    <span class="logo-text">Aero<span>Travel</span></span>
+                </a>
+                <p class="footer-desc">Your premium travel companion. Helping you explore the world, one booking at a time.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-links-group">
+                <h3>Our Services</h3>
+                <a href="#">Flight Booking</a>
+                <a href="#">Hotel Reservations</a>
+                <a href="#">Corporate Travel</a>
+            </div>
+
+            <div class="footer-links-group">
+                <h3>Support</h3>
+                <a href="#">Customer Support</a>
+                <a href="#">Booking Status</a>
+                <a href="#">Refund & Cancellations</a>
+                <a href="#">FAQs</a>
+                <a href="#">Contact Us</a>
+            </div>
+
+            <div class="footer-links-group font-light">
+                <h3>Contact</h3>
+                <p><i class="fa-solid fa-envelope"></i> support@aerotravel.com</p>
+                <p><i class="fa-solid fa-phone"></i> +1 (800) 123-4567</p>
+                <p><i class="fa-solid fa-location-dot"></i> Mumbai, Maharashtra, India</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 AeroTravel. All Rights Reserved. Made with love for premium travel experiences.</p>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="/js/main.js"></script>
+    
+    <!-- Firebase Auth Logic for Global Header -->
+    <script type="module">
+        import { auth, onAuthStateChanged, signOut } from '/js/firebase-config.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginBtn = document.getElementById('nav-login-btn');
+            const userProfile = document.getElementById('nav-user-profile');
+            const userNameDisplay = document.getElementById('user-name-display');
+            const userInitial = document.getElementById('user-initial');
+            const logoutBtn = document.getElementById('logout-btn');
+            const dropdownTrigger = document.getElementById('user-profile-trigger');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            const profileArrow = document.getElementById('user-profile-arrow');
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in
+                    loginBtn.style.display = 'none';
+                    userProfile.style.display = 'block';
+                    
+                    const displayName = user.displayName || 'User';
+                    userNameDisplay.textContent = displayName;
+                    userInitial.textContent = displayName.charAt(0).toUpperCase();
+                } else {
+                    // User is signed out
+                    loginBtn.style.display = 'flex';
+                    userProfile.style.display = 'none';
+                }
+            });
+
+            // Toggle Dropdown Menu
+            if (dropdownTrigger && profileDropdown) {
+                dropdownTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = profileDropdown.classList.toggle('active');
+                    if (profileArrow) {
+                        profileArrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+                    }
+                });
+
+                document.addEventListener('click', () => {
+                    profileDropdown.classList.remove('active');
+                    if (profileArrow) {
+                        profileArrow.style.transform = 'rotate(0deg)';
+                    }
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    try {
+                        await signOut(auth);
+                        window.location.href = '/';
+                    } catch (error) {
+                        console.error('Error signing out:', error);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

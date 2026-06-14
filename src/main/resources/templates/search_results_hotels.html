@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Search Results - AeroTravel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .results-container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 40px;
+            background: rgba(30, 30, 47, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .results-title {
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .criteria-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 30px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .criteria-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .criteria-label {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .criteria-val {
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: 500;
+        }
+        .back-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="app-logo">
+                <div class="logo-icon"><i class="fa-solid fa-paper-plane"></i></div>
+                <span class="logo-text">Aero<span>Travel</span></span>
+            </a>
+            <div class="header-actions">
+                <a href="/" class="login-btn" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i> Home</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="results-container">
+        <div style="font-size: 4rem; color: #10b981; margin-bottom: 20px;">
+            <i class="fa-regular fa-circle-check"></i>
+        </div>
+        <h2 class="results-title">Hotel Search Received Successfully!</h2>
+        <p style="color:#a0aec0;">We are preparing your hotel search results. In the next steps, we will connect this to a real Hotel Search API.</p>
+        
+        <div class="criteria-card">
+            <div class="criteria-item">
+                <span class="criteria-label">Destination</span>
+                <span class="criteria-val" th:text="${city}">New Delhi, India</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Check-In</span>
+                <span class="criteria-val" th:text="${checkIn}">2026-06-15</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Check-Out</span>
+                <span class="criteria-val" th:text="${checkOut}">2026-06-20</span>
+            </div>
+            <div class="criteria-item">
+                <span class="criteria-label">Guests & Rooms</span>
+                <span class="criteria-val" th:text="${guests}">2 Guests, 1 Room</span>
+            </div>
+        </div>
+
+        <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Modify Search</a>
+    </div>
+</body>
+</html>
