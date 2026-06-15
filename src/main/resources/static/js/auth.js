@@ -9,14 +9,13 @@ import {
 } from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const loginForm       = document.getElementById('login-form');
-    const signupForm      = document.getElementById('signup-form');
-    const loginBtn        = document.getElementById('login-btn');
-    const signupBtn       = document.getElementById('signup-btn');
-    const googleLoginBtn  = document.getElementById('google-login-btn');
-    const googleSignupBtn = document.getElementById('google-signup-btn');
-    const loginError      = document.getElementById('login-error');
-    const signupError     = document.getElementById('signup-error');
+    const loginForm      = document.getElementById('login-form');
+    const signupForm     = document.getElementById('signup-form');
+    const loginBtn       = document.getElementById('login-btn');
+    const signupBtn      = document.getElementById('signup-btn');
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    const loginError     = document.getElementById('login-error');
+    const signupError    = document.getElementById('signup-error');
 
     // ---- Helper: toggle button loading state ----
     function setLoading(button, isLoading) {
@@ -97,23 +96,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ========================================
-    // GOOGLE SIGN-IN (Login & Signup)
+    // GOOGLE SIGN-IN (Login only)
+    // New Google users are redirected to /profile
+    // to fill in their phone number.
+    // Returning Google users go straight to home.
     // ========================================
-    async function handleGoogleAuth(errorEl) {
-        hideError(errorEl);
+    async function handleGoogleLogin() {
+        hideError(loginError);
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
-            await saveUserToFirestore(result.user);
-            window.location.href = '/';
+            const user = result.user;
+
+            // Check if Firestore profile already exists
+            const userRef = doc(db, 'users', user.uid);
+            const snap = await getDoc(userRef);
+
+            if (!snap.exists()) {
+                // New Google user — create minimal profile, then redirect to profile page
+                // to let them fill in phone number
+                await setDoc(userRef, {
+                    uid: user.uid,
+                    fullName: user.displayName || '',
+                    email: user.email || '',
+                    phoneNumber: '',          // to be filled in on profile page
+                    createdAt: new Date().toISOString(),
+                    role: 'customer'
+                });
+                // Redirect to profile so they can add their phone number
+                window.location.href = '/profile';
+            } else {
+                // Returning user — go home
+                window.location.href = '/';
+            }
         } catch (error) {
-            console.error('Google Auth Error:', error);
-            showError(errorEl, getErrorMessage(error.code));
+            console.error('Google Sign-in Error:', error);
+            showError(loginError, getErrorMessage(error.code));
         }
     }
 
-    if (googleLoginBtn)  googleLoginBtn.addEventListener('click',  () => handleGoogleAuth(loginError));
-    if (googleSignupBtn) googleSignupBtn.addEventListener('click', () => handleGoogleAuth(signupError));
+    if (googleLoginBtn) googleLoginBtn.addEventListener('click', handleGoogleLogin);
 
     // ========================================
     // EMAIL/PASSWORD + PHONE (no OTP) SIGNUP
