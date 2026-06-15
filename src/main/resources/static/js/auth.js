@@ -85,12 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
             'auth/invalid-phone-number': 'Invalid phone number. Use international format (e.g. +919876543210).',
             'auth/invalid-verification-code': 'Invalid OTP code. Please try again.',
             'auth/code-expired': 'OTP has expired. Please restart signup.',
-            'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+            'auth/popup-closed-by-user': 'Sign-in popup was closed before completing.',
+            'auth/popup-blocked': 'Popup was blocked by your browser. Please allow popups for this site.',
+            'auth/cancelled-popup-request': 'Another sign-in popup is already open.',
+            'auth/operation-not-allowed': 'This sign-in method is not enabled. Please enable it in Firebase Console under Authentication → Sign-in method.',
             'auth/provider-already-linked': 'Phone is already linked to this account.',
             'auth/credential-already-in-use': 'This phone number is already linked to another account.',
+            'auth/network-request-failed': 'Network error. Please check your internet connection.',
+            'auth/internal-error': 'An internal error occurred. Please try again.',
+            'auth/unauthorized-domain': 'This domain is not authorized. Add it in Firebase Console under Authentication → Settings → Authorized domains.',
         };
-        return map[code] || 'An error occurred. Please try again.';
+        return map[code] || `Sign-in failed (${code}). Please check Firebase Console settings.`;
     }
+
 
     // ========================================
     // EMAIL/PASSWORD LOGIN
