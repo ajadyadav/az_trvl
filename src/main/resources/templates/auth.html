@@ -76,6 +76,12 @@
                             <i class="fa-solid fa-spinner fa-spin loader-icon" style="display: none;"></i>
                         </button>
                     </form>
+                    <div class="auth-divider">
+                        <span>OR</span>
+                    </div>
+                    <button type="button" class="google-auth-btn" id="google-login-btn">
+                        <i class="fa-brands fa-google"></i> Continue with Google
+                    </button>
                 </div>
 
                 <!-- Signup Form -->
@@ -107,11 +113,48 @@
                                     <i class="fa-regular fa-eye"></i>
                                 </button>
                             </div>
+                        <div class="input-group">
+                            <label for="signup-phone">Phone Number</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="tel" id="signup-phone" placeholder="e.g. +919876543210" required pattern="^\+[1-9]\d{1,14}$">
+                            </div>
                         </div>
+                        <div id="recaptcha-container"></div>
                         <div id="signup-error" class="error-message"></div>
                         <button type="submit" class="auth-submit-btn" id="signup-btn">
-                            <span class="btn-text">Sign Up</span>
+                            <span class="btn-text">Send Verification Code</span>
                             <i class="fa-solid fa-spinner fa-spin loader-icon" style="display: none;"></i>
+                        </button>
+                    </form>
+                    <div class="auth-divider">
+                        <span>OR</span>
+                    </div>
+                    <button type="button" class="google-auth-btn" id="google-signup-btn">
+                        <i class="fa-brands fa-google"></i> Sign Up with Google
+                    </button>
+                </div>
+
+                <!-- OTP Verification Form -->
+                <div id="otp-form-container" class="auth-form-container">
+                    <h2 class="auth-title">Verify Phone Number</h2>
+                    <p class="auth-subtitle">We have sent a verification code to <span id="display-phone-number" style="font-weight: 600; color: var(--primary);"></span>.</p>
+                    
+                    <form id="otp-form" class="auth-form">
+                        <div class="input-group">
+                            <label for="otp-code">Verification Code (OTP)</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-key"></i>
+                                <input type="text" id="otp-code" placeholder="Enter 6-digit code" required maxlength="6" pattern="\d{6}">
+                            </div>
+                        </div>
+                        <div id="otp-error" class="error-message"></div>
+                        <button type="submit" class="auth-submit-btn" id="verify-otp-btn">
+                            <span class="btn-text">Verify & Complete Signup</span>
+                            <i class="fa-solid fa-spinner fa-spin loader-icon" style="display: none;"></i>
+                        </button>
+                        <button type="button" class="auth-submit-btn" style="background: transparent; border: 1px solid var(--border-color); margin-top: 10px;" id="cancel-otp-btn">
+                            Cancel
                         </button>
                     </form>
                 </div>
@@ -124,6 +167,7 @@
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('login-form-container');
             const signupForm = document.getElementById('signup-form-container');
+            const otpForm = document.getElementById('otp-form-container');
             const tabButtons = document.querySelectorAll('.auth-tab-btn');
 
             tabButtons.forEach(btn => {
@@ -134,6 +178,7 @@
                 }
             });
 
+            otpForm.classList.remove('active');
             if (tab === 'login') {
                 loginForm.classList.add('active');
                 signupForm.classList.remove('active');
@@ -156,6 +201,10 @@
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
             }
+        }
+        
+        window.cancelOtpFlow = function() {
+            switchAuthTab('signup');
         }
     </script>
 

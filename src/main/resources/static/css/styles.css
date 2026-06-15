@@ -2360,3 +2360,51 @@ input[type="date"] {
     background: var(--primary-hover);
     transform: translateY(-1px);
 }
+
+/* Auth Page Extensions */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.25rem 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+.auth-divider:not(:empty)::before {
+    margin-right: .75em;
+}
+.auth-divider:not(:empty)::after {
+    margin-left: .75em;
+}
+.google-auth-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.85rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+.google-auth-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-color-hover);
+    transform: translateY(-1px);
+}
+#recaptcha-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
