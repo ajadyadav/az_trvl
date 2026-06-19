@@ -3,72 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Search Results - AeroTravel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title th:text="'Hotels in ' + ${city} + ' – AeroTravel'">Hotel Results – AeroTravel</title>
+    <meta name="description" th:content="'Find and book the best hotels in ' + ${city} + '. Compare prices, amenities and availability.'">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <style>
-        .results-container {
-            max-width: 1000px;
-            margin: 100px auto;
-            padding: 40px;
-            background: rgba(30, 30, 47, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        /* ── Page Reset ─────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); font-family: 'Outfit', sans-serif; color: #e2e8f0; }
+
+        /* ── Sticky Search Bar ──────────────────────────────── */
+        .results-header {
+            position: sticky; top: 70px; z-index: 100;
+            background: rgba(10,10,20,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 0;
         }
-        .results-title {
-            font-size: 2.2rem;
-            color: #fff;
-            margin-bottom: 20px;
+        .results-header-inner {
+            max-width: 1240px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
         }
-        .criteria-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 24px;
-            margin: 30px 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            text-align: left;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .search-chips { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px; padding: 6px 14px; font-size: 0.83rem; color: #cbd5e0;
         }
-        .criteria-item {
-            display: flex;
-            flex-direction: column;
+        .chip i { color: #6366f1; font-size: 0.78rem; }
+        .chip strong { color: #fff; }
+        .modify-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff; padding: 9px 20px; border-radius: 10px; text-decoration: none;
+            font-size: 0.85rem; font-weight: 600; transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.3);
         }
-        .criteria-label {
-            font-size: 0.85rem;
-            color: #a0aec0;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .modify-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(99,102,241,0.5); }
+
+        /* ── Layout ─────────────────────────────────────────── */
+        .page-body {
+            max-width: 1240px; margin: 0 auto; padding: 28px 24px 60px;
+            display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: start;
         }
-        .criteria-val {
-            font-size: 1.1rem;
-            color: #fff;
-            font-weight: 500;
+
+        /* ── Filter Sidebar ─────────────────────────────────── */
+        .filter-sidebar { position: sticky; top: 140px; }
+        .filter-card {
+            background: rgba(18,18,34,0.9); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px; padding: 22px; margin-bottom: 16px;
         }
-        .back-btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        .filter-title {
+            font-size: 0.78rem; font-weight: 700; color: #6366f1; text-transform: uppercase;
+            letter-spacing: 0.8px; margin-bottom: 16px; display: flex; align-items: center; gap: 6px;
         }
-        .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        .filter-title i { font-size: 0.8rem; }
+        .filter-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer;
+            transition: color 0.15s;
+        }
+        .filter-row:last-child { border-bottom: none; }
+        .filter-row:hover { color: #fff; }
+        .filter-row input[type="checkbox"] { accent-color: #6366f1; width: 15px; height: 15px; cursor: pointer; }
+        .filter-row label { font-size: 0.88rem; color: #a0aec0; cursor: pointer; flex: 1; }
+        .filter-row .count { font-size: 0.75rem; color: #4a5568; }
+        .stars-filter { color: #f6c90e; font-size: 0.9rem; }
+
+        .price-slider-wrap { padding: 8px 0 4px; }
+        .price-range-display { display: flex; justify-content: space-between; font-size: 0.82rem; color: #a0aec0; margin-bottom: 10px; }
+        .price-range-display strong { color: #fff; }
+        input[type="range"] { width: 100%; accent-color: #6366f1; cursor: pointer; }
+
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between; padding: 10px 0;
+        }
+        .toggle-label { font-size: 0.88rem; color: #a0aec0; }
+        .toggle-switch { position: relative; width: 40px; height: 22px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+            border-radius: 22px; cursor: pointer; transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px;
+            background: #fff; border-radius: 50%; transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background: #6366f1; }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+        /* ── Results Column ─────────────────────────────────── */
+        .results-col {}
+        .results-top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
+        }
+        .results-count-text { font-size: 0.9rem; color: #a0aec0; }
+        .results-count-text strong { color: #fff; font-size: 1rem; }
+
+        .sort-bar { display: flex; align-items: center; gap: 8px; }
+        .sort-label { font-size: 0.8rem; color: #718096; }
+        .sort-select {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0; border-radius: 8px; padding: 7px 12px; font-size: 0.85rem;
+            font-family: 'Outfit', sans-serif; cursor: pointer; outline: none;
+        }
+        .sort-select option { background: #1a1a30; }
+
+        /* ── Hotel Card ─────────────────────────────────────── */
+        .hotels-list { display: flex; flex-direction: column; gap: 16px; }
+        .hotel-card {
+            display: flex; background: rgba(18,18,34,0.85);
+            border: 1px solid rgba(255,255,255,0.07); border-radius: 20px;
+            overflow: hidden; transition: all 0.3s ease;
+            animation: fadeSlideUp 0.4s ease both;
+            cursor: pointer;
+        }
+        .hotel-card:hover {
+            border-color: rgba(99,102,241,0.4);
+            box-shadow: 0 14px 44px rgba(0,0,0,0.4);
+            transform: translateY(-3px);
+        }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .hotel-card:nth-child(2) { animation-delay: 0.07s; }
+        .hotel-card:nth-child(3) { animation-delay: 0.14s; }
+        .hotel-card:nth-child(4) { animation-delay: 0.21s; }
+        .hotel-card:nth-child(5) { animation-delay: 0.28s; }
+        .hotel-card:nth-child(n+6) { animation-delay: 0.32s; }
+
+        /* Photo */
+        .hotel-photo {
+            width: 240px; min-width: 240px; position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #1a1a35, #252550);
+        }
+        .hotel-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+        .hotel-card:hover .hotel-photo img { transform: scale(1.06); }
+        .hotel-photo-placeholder {
+            width: 100%; height: 100%; min-height: 200px;
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.12); font-size: 3.5rem;
+        }
+        .photo-badge {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+            color: #fff; font-size: 0.75rem; font-weight: 600;
+            padding: 4px 10px; border-radius: 50px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .photo-badge.green { background: rgba(16,185,129,0.85); }
+
+        /* Info */
+        .hotel-info {
+            flex: 1; padding: 20px 22px;
+            display: flex; flex-direction: column; justify-content: space-between; min-width: 0;
+        }
+        .hotel-name {
+            font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .hotel-stars { color: #f6c90e; font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 6px; }
+        .hotel-address {
+            font-size: 0.8rem; color: #718096; margin-bottom: 14px;
+            display: flex; align-items: flex-start; gap: 5px;
+        }
+        .hotel-address i { color: #6366f1; margin-top: 2px; flex-shrink: 0; }
+        .hotel-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+        .tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            border-radius: 50px; padding: 4px 11px; font-size: 0.77rem; white-space: nowrap;
+        }
+        .tag-purple { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); color: #a5b4fc; }
+        .tag-amber  { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fcd34d; }
+        .tag-green  { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #6ee7b7; }
+        .tag-red    { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+
+        /* Price Panel */
+        .hotel-price-panel {
+            width: 200px; min-width: 200px; padding: 20px 18px;
+            display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.01);
+        }
+        .price-label { font-size: 0.72rem; color: #718096; text-align: right; margin-bottom: 3px; }
+        .price-amount {
+            font-size: 1.7rem; font-weight: 800; color: #fff; line-height: 1; text-align: right; margin-bottom: 2px;
+        }
+        .price-sub { font-size: 0.7rem; color: #4a5568; text-align: right; margin-bottom: 14px; }
+
+        .rooms-count { font-size: 0.78rem; color: #f6c90e; text-align: right; margin-bottom: 8px; }
+
+        .view-rooms-btn {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white; border: none; border-radius: 12px; padding: 11px 0;
+            font-size: 0.88rem; font-weight: 700; text-decoration: none;
+            transition: all 0.25s; box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+            cursor: pointer;
+        }
+        .view-rooms-btn:hover {
+            background: linear-gradient(135deg, #7c7fff, #6366f1);
+            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.55);
+        }
+
+        /* ── Empty State ─────────────────────────────────────── */
+        .empty-state {
+            grid-column: 1 / -1; max-width: 520px; margin: 60px auto; text-align: center;
+            padding: 50px 30px; background: rgba(18,18,34,0.8);
+            border: 1px solid rgba(255,255,255,0.07); border-radius: 24px;
+        }
+        .empty-icon { font-size: 4rem; color: rgba(99,102,241,0.35); margin-bottom: 20px; }
+        .empty-title { font-size: 1.5rem; font-weight: 700; color: #e2e8f0; margin-bottom: 10px; }
+        .empty-desc { color: #718096; font-size: 0.95rem; margin-bottom: 28px; }
+
+        /* ── Responsive ──────────────────────────────────────── */
+        @media (max-width: 900px) {
+            .page-body { grid-template-columns: 1fr; }
+            .filter-sidebar { position: static; }
+            .hotel-card { flex-direction: column; }
+            .hotel-photo { width: 100%; min-width: unset; height: 200px; }
+            .hotel-price-panel {
+                width: 100%; min-width: unset; flex-direction: row; align-items: center;
+                border-left: none; border-top: 1px solid rgba(255,255,255,0.05); padding: 14px 18px;
+            }
+            .price-amount { font-size: 1.4rem; }
+            .view-rooms-btn { width: auto; padding: 10px 22px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Header -->
     <header class="app-header">
         <div class="header-container">
             <a href="/" class="app-logo">
@@ -76,38 +245,296 @@
                 <span class="logo-text">Aero<span>Travel</span></span>
             </a>
             <div class="header-actions">
-                <a href="/" class="login-btn" style="text-decoration:none;"><i class="fa-solid fa-arrow-left"></i> Home</a>
+                <a href="/" class="login-btn" style="text-decoration:none;">
+                    <i class="fa-solid fa-arrow-left"></i> New Search
+                </a>
             </div>
         </div>
     </header>
 
-    <div class="results-container">
-        <div style="font-size: 4rem; color: #10b981; margin-bottom: 20px;">
-            <i class="fa-regular fa-circle-check"></i>
+    <!-- Sticky Search Summary -->
+    <div class="results-header">
+        <div class="results-header-inner">
+            <div class="search-chips">
+                <div class="chip">
+                    <i class="fa-solid fa-city"></i>
+                    <strong th:text="${city}">City</strong>
+                    <span th:if="${countryCode}" th:text="'(' + ${countryCode} + ')'" style="opacity:0.55"></span>
+                </div>
+                <div class="chip">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <strong th:text="${checkIn}">Check-in</strong>
+                    <span style="opacity:0.4">→</span>
+                    <strong th:text="${checkOut}">Check-out</strong>
+                </div>
+                <div class="chip">
+                    <i class="fa-solid fa-user-group"></i>
+                    <strong th:text="${adults} + ' Adult' + (${adults} > 1 ? 's' : '') + ', ' + ${rooms} + ' Room' + (${rooms} > 1 ? 's' : '')">2 Adults, 1 Room</strong>
+                </div>
+            </div>
+            <a href="/" class="modify-btn">
+                <i class="fa-solid fa-sliders"></i> Modify Search
+            </a>
         </div>
-        <h2 class="results-title">Hotel Search Received Successfully!</h2>
-        <p style="color:#a0aec0;">We are preparing your hotel search results. In the next steps, we will connect this to a real Hotel Search API.</p>
-        
-        <div class="criteria-card">
-            <div class="criteria-item">
-                <span class="criteria-label">Destination</span>
-                <span class="criteria-val" th:text="${city}">New Delhi, India</span>
-            </div>
-            <div class="criteria-item">
-                <span class="criteria-label">Check-In</span>
-                <span class="criteria-val" th:text="${checkIn}">2026-06-15</span>
-            </div>
-            <div class="criteria-item">
-                <span class="criteria-label">Check-Out</span>
-                <span class="criteria-val" th:text="${checkOut}">2026-06-20</span>
-            </div>
-            <div class="criteria-item">
-                <span class="criteria-label">Guests & Rooms</span>
-                <span class="criteria-val" th:text="${guests}">2 Guests, 1 Room</span>
-            </div>
-        </div>
-
-        <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Modify Search</a>
     </div>
+
+    <!-- Main Body -->
+    <div class="page-body">
+
+        <!-- ── Filter Sidebar ── -->
+        <aside class="filter-sidebar">
+
+            <!-- Star Rating Filter -->
+            <div class="filter-card">
+                <div class="filter-title"><i class="fa-solid fa-star"></i> Star Rating</div>
+                <label class="filter-row">
+                    <input type="checkbox" class="star-filter" data-stars="5" checked>
+                    <label><span class="stars-filter">★★★★★</span> 5 Stars</label>
+                    <span class="count"></span>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="star-filter" data-stars="4" checked>
+                    <label><span class="stars-filter">★★★★☆</span> 4 Stars</label>
+                    <span class="count"></span>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="star-filter" data-stars="3" checked>
+                    <label><span class="stars-filter">★★★☆☆</span> 3 Stars</label>
+                    <span class="count"></span>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="star-filter" data-stars="2" checked>
+                    <label><span class="stars-filter">★★☆☆☆</span> 2 Stars</label>
+                    <span class="count"></span>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="star-filter" data-stars="1" checked>
+                    <label><span class="stars-filter">★☆☆☆☆</span> 1 Star</label>
+                    <span class="count"></span>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="star-filter" data-stars="0" checked>
+                    <label>Unrated</label>
+                    <span class="count"></span>
+                </label>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filter-card">
+                <div class="filter-title"><i class="fa-solid fa-indian-rupee-sign"></i> Price per Night</div>
+                <div class="price-slider-wrap">
+                    <div class="price-range-display">
+                        <span>₹<strong id="price-min-display">0</strong></span>
+                        <span>₹<strong id="price-max-display">50,000+</strong></span>
+                    </div>
+                    <input type="range" id="price-max-slider" min="0" max="200000" step="1000" value="200000"
+                           oninput="filterByPrice(this.value)">
+                </div>
+            </div>
+
+            <!-- Meal Plan -->
+            <div class="filter-card">
+                <div class="filter-title"><i class="fa-solid fa-utensils"></i> Meal Plan</div>
+                <label class="filter-row">
+                    <input type="checkbox" class="board-filter" data-board="breakfast" checked>
+                    <label>Breakfast Included</label>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="board-filter" data-board="room only" checked>
+                    <label>Room Only</label>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="board-filter" data-board="all inclusive" checked>
+                    <label>All Inclusive</label>
+                </label>
+                <label class="filter-row">
+                    <input type="checkbox" class="board-filter" data-board="other" checked>
+                    <label>Other</label>
+                </label>
+            </div>
+
+            <!-- Free Cancellation Toggle -->
+            <div class="filter-card">
+                <div class="filter-title"><i class="fa-solid fa-rotate-left"></i> Cancellation</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Free cancellation only</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="refundable-toggle" onchange="applyFilters()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- ── Results Column ── -->
+        <div class="results-col">
+
+            <!-- Top bar: count + sort -->
+            <div class="results-top-bar">
+                <p class="results-count-text" th:if="${totalResults > 0}">
+                    <strong th:text="${totalResults}">0</strong> hotels found
+                    <span style="color:#4a5568"> · prices shown per night in INR</span>
+                </p>
+                <p class="results-count-text" th:if="${totalResults == 0}">No hotels found.</p>
+                <div class="sort-bar">
+                    <span class="sort-label">Sort by</span>
+                    <select class="sort-select" id="sort-select" onchange="sortHotels(this.value)">
+                        <option value="recommended">Recommended</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="stars-desc">Highest Rated</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hotel Cards -->
+            <div class="hotels-list" id="hotels-list">
+
+                <div class="hotel-card" th:each="hotel : ${hotels}"
+                     th:data-price="${hotel.price}"
+                     th:data-stars="${hotel.starRating}"
+                     th:data-board="${#strings.toLowerCase(hotel.boardName)}"
+                     th:data-refundable="${hotel.refundable}">
+
+                    <!-- Photo -->
+                    <div class="hotel-photo">
+                        <img th:if="${hotel.hasPhoto()}"
+                             th:src="${hotel.mainPhoto}"
+                             th:alt="${hotel.name}"
+                             onerror="this.parentElement.innerHTML='<div class=\'hotel-photo-placeholder\'><i class=\'fa-solid fa-hotel\'></i></div>'">
+                        <div class="hotel-photo-placeholder" th:unless="${hotel.hasPhoto()}">
+                            <i class="fa-solid fa-hotel"></i>
+                        </div>
+                        <div class="photo-badge green" th:if="${hotel.refundable}">
+                            <i class="fa-solid fa-rotate-left"></i> Free Cancel
+                        </div>
+                        <div class="photo-badge" th:unless="${hotel.refundable}">
+                            <i class="fa-solid fa-ban"></i> Non-Refund
+                        </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="hotel-info">
+                        <div>
+                            <h2 class="hotel-name" th:text="${hotel.name}">Hotel Name</h2>
+                            <div class="hotel-stars" th:text="${hotel.stars}">★★★★☆</div>
+                            <p class="hotel-address" th:if="${hotel.address != null and !hotel.address.isBlank()}">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span th:text="${hotel.address}">Address</span>
+                            </p>
+                        </div>
+                        <div class="hotel-tags">
+                            <span class="tag tag-purple">
+                                <i class="fa-solid fa-bed"></i>
+                                <span th:text="${hotel.roomName}">Room Type</span>
+                            </span>
+                            <span class="tag tag-amber">
+                                <i class="fa-solid fa-utensils"></i>
+                                <span th:text="${hotel.boardName}">Meal Plan</span>
+                            </span>
+                            <span class="tag tag-green" th:if="${hotel.refundable}">
+                                <i class="fa-solid fa-rotate-left"></i> Free Cancellation
+                            </span>
+                            <span class="tag tag-red" th:unless="${hotel.refundable}">
+                                <i class="fa-solid fa-ban"></i> Non-Refundable
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Price Panel -->
+                    <div class="hotel-price-panel">
+                        <div>
+                            <p class="price-label">Starting from</p>
+                            <p class="price-amount" th:text="${hotel.formattedPrice}">₹0</p>
+                            <p class="price-sub">per night · incl. taxes</p>
+                        </div>
+                        <a class="view-rooms-btn"
+                           th:href="@{/hotels/{id}(
+                               id=${hotel.hotelId},
+                               hotelName=${hotel.name},
+                               hotelAddress=${hotel.address},
+                               mainPhoto=${hotel.mainPhoto},
+                               starRating=${hotel.starRating},
+                               checkIn=${checkIn},
+                               checkOut=${checkOut},
+                               adults=${adults},
+                               rooms=${rooms},
+                               city=${city},
+                               countryCode=${countryCode}
+                           )}">
+                            View Rooms <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" th:if="${#lists.isEmpty(hotels)}">
+                    <div class="empty-icon"><i class="fa-solid fa-hotel"></i></div>
+                    <h2 class="empty-title">No Hotels Found</h2>
+                    <p class="empty-desc">
+                        We couldn't find available hotels in
+                        <strong th:text="${city}">this city</strong> for your dates. Try changing your search.
+                    </p>
+                    <a href="/" class="modify-btn" style="display:inline-flex;">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Search
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ── Client-side Filter + Sort ──────────────────────────────
+    let maxPrice = 200000;
+
+    function applyFilters() {
+        const cards   = document.querySelectorAll('#hotels-list .hotel-card');
+        const checkedStars = [...document.querySelectorAll('.star-filter:checked')].map(c => parseInt(c.dataset.stars));
+        const refundableOnly = document.getElementById('refundable-toggle').checked;
+
+        cards.forEach(card => {
+            const price     = parseFloat(card.dataset.price) || 0;
+            const stars     = parseInt(card.dataset.stars) || 0;
+            const board     = (card.dataset.board || '').toLowerCase();
+            const refund    = card.dataset.refundable === 'true';
+
+            const passPrice  = price <= maxPrice;
+            const passStars  = checkedStars.includes(stars);
+            const passRefund = !refundableOnly || refund;
+
+            card.style.display = (passPrice && passStars && passRefund) ? '' : 'none';
+        });
+    }
+
+    function filterByPrice(val) {
+        maxPrice = parseInt(val);
+        const fmt = maxPrice >= 200000 ? '50,000+' : (maxPrice/1000).toFixed(0) + ',000';
+        document.getElementById('price-max-display').textContent = fmt;
+        applyFilters();
+    }
+
+    document.querySelectorAll('.star-filter, .board-filter').forEach(el =>
+        el.addEventListener('change', applyFilters));
+
+    function sortHotels(method) {
+        const list  = document.getElementById('hotels-list');
+        const cards = [...list.querySelectorAll('.hotel-card')];
+        cards.sort((a, b) => {
+            const pa = parseFloat(a.dataset.price) || 0;
+            const pb = parseFloat(b.dataset.price) || 0;
+            const sa = parseInt(a.dataset.stars) || 0;
+            const sb = parseInt(b.dataset.stars) || 0;
+            if (method === 'price-asc')  return pa - pb;
+            if (method === 'price-desc') return pb - pa;
+            if (method === 'stars-desc') return sb - sa;
+            return 0;
+        });
+        cards.forEach(c => list.appendChild(c));
+    }
+    </script>
+
 </body>
 </html>

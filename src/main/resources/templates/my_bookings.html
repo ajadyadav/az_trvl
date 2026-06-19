@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - AeroTravel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body { background: var(--bg-dark); min-height: 100vh; }
+        .bookings-page { max-width: 860px; margin: 100px auto 60px; padding: 0 24px; }
+        .page-title { font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        .page-sub   { color: #718096; font-size: 0.9rem; margin-bottom: 32px; }
+
+        .booking-item {
+            background: rgba(22,22,40,0.8);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 18px;
+            padding: 22px 26px;
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            transition: border-color 0.25s;
+        }
+        .booking-item:hover { border-color: rgba(99,102,241,0.3); }
+
+        .bi-hotel { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+        .bi-dates { font-size: 0.85rem; color: #a0aec0; margin-bottom: 8px; }
+        .bi-room  { font-size: 0.82rem; color: #718096; }
+        .bi-ref   { font-size: 0.75rem; color: #4a5568; font-family: monospace; margin-top: 6px; }
+
+        .bi-right { text-align: right; }
+        .bi-price { font-size: 1.4rem; font-weight: 800; color: #fff; }
+        .bi-status { margin-top: 8px; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 12px; border-radius: 50px; font-size: 0.78rem; font-weight: 700;
+        }
+        .status-confirmed { background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.25); }
+        .status-pending   { background:rgba(245,158,11,0.12); color:#fcd34d; border:1px solid rgba(245,158,11,0.25); }
+        .status-cancelled { background:rgba(239,68,68,0.12);  color:#fca5a5; border:1px solid rgba(239,68,68,0.25); }
+
+        .empty-state {
+            text-align: center; padding: 60px 30px;
+            background: rgba(22,22,40,0.7);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 22px;
+        }
+        .empty-state i { font-size: 3.5rem; color: rgba(99,102,241,0.35); margin-bottom: 16px; }
+        .empty-state h2 { color: #e2e8f0; margin-bottom: 8px; }
+        .empty-state p  { color: #718096; margin-bottom: 24px; }
+
+        .back-home {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg,#6366f1,#4f46e5);
+            color: white; padding: 12px 24px; border-radius: 12px;
+            text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            transition: all 0.25s;
+        }
+        .back-home:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="app-logo">
+                <div class="logo-icon"><i class="fa-solid fa-paper-plane"></i></div>
+                <span class="logo-text">Aero<span>Travel</span></span>
+            </a>
+            <div class="header-actions">
+                <a href="/" class="login-btn" style="text-decoration:none;">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="bookings-page">
+        <h1 class="page-title"><i class="fa-solid fa-list-check" style="color:#6366f1;margin-right:10px;"></i>My Bookings</h1>
+        <p class="page-sub" th:text="${email != null and !email.isBlank()} ? 'Showing bookings for ' + ${email} : 'All hotel bookings'"></p>
+
+        <!-- Bookings list -->
+        <div th:if="${!#lists.isEmpty(bookings)}">
+            <div class="booking-item" th:each="b : ${bookings}">
+                <div>
+                    <div class="bi-hotel" th:text="${b.hotelName}">Hotel Name</div>
+                    <div class="bi-dates">
+                        <i class="fa-regular fa-calendar" style="color:#6366f1;"></i>
+                        <span th:text="${#temporals.format(b.checkIn,'dd MMM yyyy')}"></span>
+                        &nbsp;→&nbsp;
+                        <span th:text="${#temporals.format(b.checkOut,'dd MMM yyyy')}"></span>
+                    </div>
+                    <div class="bi-room" th:text="${b.roomName} + ' · ' + ${b.boardName}"></div>
+                    <div class="bi-ref">Ref: <span th:text="${b.bookingRef}"></span></div>
+                </div>
+                <div class="bi-right">
+                    <div class="bi-price" th:text="${b.formattedPrice()}">₹—</div>
+                    <div class="bi-status">
+                        <span th:class="'status-badge status-' + ${b.status.name().toLowerCase()}"
+                              th:text="${b.status.name()}">CONFIRMED</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" th:if="${#lists.isEmpty(bookings)}">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <h2>No Bookings Yet</h2>
+            <p>You haven't made any hotel bookings yet. Start searching now!</p>
+            <a href="/" class="back-home"><i class="fa-solid fa-magnifying-glass"></i> Search Hotels</a>
+        </div>
+    </div>
+</body>
+</html>

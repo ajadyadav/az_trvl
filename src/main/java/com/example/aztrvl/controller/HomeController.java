@@ -35,7 +35,7 @@ public class HomeController {
             @RequestParam("classType") String classType,
             @RequestParam(value = "fareType", required = false) String fareType,
             Model model) {
-        
+
         model.addAttribute("tripType", tripType);
         model.addAttribute("from", from);
         model.addAttribute("to", to);
@@ -44,23 +44,8 @@ public class HomeController {
         model.addAttribute("travellers", travellers);
         model.addAttribute("classType", classType);
         model.addAttribute("fareType", fareType);
-        
-        return "search_results_flights"; // We will build search results page later
-    }
 
-    @PostMapping("/search/hotels")
-    public String searchHotels(
-            @RequestParam("city") String city,
-            @RequestParam("checkIn") String checkIn,
-            @RequestParam("checkOut") String checkOut,
-            @RequestParam("guests") String guests,
-            Model model) {
-        
-        model.addAttribute("city", city);
-        model.addAttribute("checkIn", checkIn);
-        model.addAttribute("checkOut", checkOut);
-        model.addAttribute("guests", guests);
-        
-        return "search_results_hotels"; // We will build search results page later
+        return "search_results_flights";
     }
 }
+

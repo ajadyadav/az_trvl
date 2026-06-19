@@ -253,12 +253,21 @@
                 <!-- Hotel Search Form -->
                 <form id="hotels-form" action="/search/hotels" method="post" class="search-form">
                     <div class="search-fields-grid hotels-grid">
-                        <!-- City/Destination -->
-                        <div class="search-field-group">
+                        <!-- City/Destination with Country Prefix + Autocomplete -->
+                        <div class="search-field-group hotel-city-field-group">
                             <span class="field-icon"><i class="fa-solid fa-city"></i></span>
                             <div class="field-inputs">
-                                <label for="hotel-city">Where are you going?</label>
-                                <input type="text" id="hotel-city" name="city" placeholder="Destination, City, or Hotel Name" value="New Delhi, India" required autocomplete="off">
+                                <label>Where are you going?</label>
+                                <div class="city-autocomplete-wrapper">
+                                    <input type="text" id="hotel-country-code" name="countryCode" class="country-prefix-input" 
+                                           value="IN" placeholder="IN" maxlength="2" title="Country Code" autocomplete="off"
+                                           oninput="this.value = this.value.toUpperCase()">
+                                    <input type="text" id="hotel-city-display"
+                                           placeholder="City name..." value="New Delhi"
+                                           autocomplete="off">
+                                    <input type="hidden" id="hotel-city" name="city" value="New Delhi" required>
+                                </div>
+                                <div id="city-suggestions" class="autocomplete-suggestions"></div>
                             </div>
                         </div>
 
@@ -280,12 +289,42 @@
                             </div>
                         </div>
 
-                        <!-- Rooms & Guests -->
-                        <div class="search-field-group">
+                        <!-- Rooms & Guests popup -->
+                        <div class="search-field-group dropdown-trigger" onclick="toggleHotelGuestPopup(event)">
                             <span class="field-icon"><i class="fa-solid fa-people-roof"></i></span>
                             <div class="field-inputs">
-                                <label for="guests">Guests & Rooms</label>
-                                <input type="text" id="guests" name="guests" value="2 Guests, 1 Room" required>
+                                <label>Guests &amp; Rooms</label>
+                                <span class="selector-display" id="hotel-guests-display">2 Adults, 1 Room</span>
+                                <input type="hidden" name="adults" id="hotel-adults-count" value="2">
+                                <input type="hidden" name="rooms"  id="hotel-rooms-count"  value="1">
+                            </div>
+                            <!-- Hotel Guests Dropdown Panel -->
+                            <div class="traveler-dropdown" id="hotel-guest-popup" onclick="event.stopPropagation()">
+                                <div class="dropdown-section">
+                                    <div class="passenger-type">
+                                        <div>
+                                            <span class="type-name">Adults</span>
+                                            <span class="type-desc">12+ years</span>
+                                        </div>
+                                        <div class="qty-counter">
+                                            <button type="button" onclick="adjustHotelCount('adults',-1)">-</button>
+                                            <span id="hotel-qty-adults">2</span>
+                                            <button type="button" onclick="adjustHotelCount('adults',1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="passenger-type">
+                                        <div>
+                                            <span class="type-name">Rooms</span>
+                                            <span class="type-desc">Number of rooms</span>
+                                        </div>
+                                        <div class="qty-counter">
+                                            <button type="button" onclick="adjustHotelCount('rooms',-1)">-</button>
+                                            <span id="hotel-qty-rooms">1</span>
+                                            <button type="button" onclick="adjustHotelCount('rooms',1)">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="apply-btn" onclick="applyHotelGuestInfo()">Apply</button>
                             </div>
                         </div>
                     </div>
@@ -462,7 +501,134 @@
 
     <!-- Custom JavaScript -->
     <script src="/js/main.js"></script>
-    
+
+    <!-- Hotel Search: City Autocomplete + Guests Popup -->
+    <script>
+    // ── City Autocomplete ──────────────────────────────────
+    (function () {
+        const displayInput  = document.getElementById('hotel-city-display');
+        const hiddenInput   = document.getElementById('hotel-city');
+        const suggestions   = document.getElementById('city-suggestions');
+        const countrySelect = document.getElementById('hotel-country-code');
+        let debounceTimer;
+
+        if (!displayInput) return;
+
+        displayInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const q = this.value.trim();
+            if (q.length < 2) { hideSuggestions(); return; }
+            debounceTimer = setTimeout(() => {
+                const cc = countrySelect ? countrySelect.value : 'IN';
+                fetchSuggestions(q, cc);
+            }, 380);
+        });
+
+        displayInput.addEventListener('blur', () => {
+            // Delay so click on suggestion fires first
+            setTimeout(hideSuggestions, 200);
+            // If user typed but never picked a suggestion, use display value
+            if (!hiddenInput.value && displayInput.value.trim()) {
+                hiddenInput.value = displayInput.value.trim();
+            }
+        });
+
+        displayInput.addEventListener('focus', function () {
+            if (this.value.length >= 2 && suggestions.children.length > 0) {
+                suggestions.classList.add('active');
+            }
+        });
+
+        if (countrySelect) {
+            countrySelect.addEventListener('input', () => {
+                hiddenInput.value = '';
+                displayInput.value = '';
+                hideSuggestions();
+            });
+        }
+
+        async function fetchSuggestions(q, cc) {
+            try {
+                const res = await fetch(`/api/locations?q=${encodeURIComponent(q)}&countryCode=${cc}`);
+                const data = await res.json();
+                renderSuggestions(data);
+            } catch (e) { console.error('Autocomplete error:', e); }
+        }
+
+        function renderSuggestions(cities) {
+            suggestions.innerHTML = '';
+            if (!cities || cities.length === 0) { hideSuggestions(); return; }
+            cities.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `<i class="fa-solid fa-location-dot"></i>
+                    <div class="autocomplete-item-text">
+                        <span class="ac-city">${c.city}</span>
+                        <span class="ac-country">${c.country || ''}</span>
+                    </div>`;
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    displayInput.value = c.city;
+                    hiddenInput.value  = c.city;
+                    hideSuggestions();
+                });
+                suggestions.appendChild(item);
+            });
+            suggestions.classList.add('active');
+        }
+
+        function hideSuggestions() { suggestions.classList.remove('active'); }
+
+        // Form guard: ensure hidden city is filled before submit
+        const hotelsForm = document.getElementById('hotels-form');
+        if (hotelsForm) {
+            hotelsForm.addEventListener('submit', function (e) {
+                if (!hiddenInput.value && displayInput.value.trim()) {
+                    hiddenInput.value = displayInput.value.trim();
+                }
+                if (!hiddenInput.value) {
+                    e.preventDefault();
+                    displayInput.focus();
+                    displayInput.style.outline = '2px solid #f56565';
+                    setTimeout(() => displayInput.style.outline = '', 2000);
+                }
+            });
+        }
+    })();
+
+    // ── Hotel Guests Popup ─────────────────────────────────
+    let hotelAdults = 2, hotelRooms = 1;
+
+    function toggleHotelGuestPopup(e) {
+        e.stopPropagation();
+        document.getElementById('hotel-guest-popup').classList.toggle('active');
+    }
+
+    function adjustHotelCount(type, delta) {
+        if (type === 'adults') {
+            hotelAdults = Math.max(1, hotelAdults + delta);
+            document.getElementById('hotel-qty-adults').textContent = hotelAdults;
+        } else {
+            hotelRooms = Math.max(1, hotelRooms + delta);
+            document.getElementById('hotel-qty-rooms').textContent = hotelRooms;
+        }
+    }
+
+    function applyHotelGuestInfo() {
+        const txt = `${hotelAdults} Adult${hotelAdults > 1 ? 's' : ''}, ${hotelRooms} Room${hotelRooms > 1 ? 's' : ''}`;
+        document.getElementById('hotel-guests-display').textContent = txt;
+        document.getElementById('hotel-adults-count').value = hotelAdults;
+        document.getElementById('hotel-rooms-count').value  = hotelRooms;
+        document.getElementById('hotel-guest-popup').classList.remove('active');
+    }
+
+    window.addEventListener('click', () => {
+        const p = document.getElementById('hotel-guest-popup');
+        if (p) p.classList.remove('active');
+    });
+    </script>
+
+
     <!-- Firebase Auth Logic for Global Header -->
     <script type="module">
         import { auth, onAuthStateChanged, signOut } from '/js/firebase-config.js';

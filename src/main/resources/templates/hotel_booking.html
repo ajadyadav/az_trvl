@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Book ' + ${hotelName} + ' – AeroTravel'">Hotel Booking – AeroTravel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-dark); font-family: 'Outfit', sans-serif; color: #e2e8f0; min-height: 100vh; }
+
+        /* ── Progress Steps ──────────────────────────────────── */
+        .progress-wrap {
+            max-width: 1060px; margin: 0 auto; padding: 22px 24px 0;
+            display: flex; align-items: center;
+        }
+        .step { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: #4a5568; }
+        .step.active { color: #6366f1; }
+        .step.done   { color: #10b981; }
+        .step-num {
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid currentColor;
+            display: flex; align-items: center; justify-content: center; font-size: 0.78rem; flex-shrink: 0;
+        }
+        .step.done .step-num   { background: #10b981; border-color: #10b981; color: white; }
+        .step.active .step-num { background: #6366f1; border-color: #6366f1; color: white; }
+        .step-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); margin: 0 10px; }
+
+        /* ── Page Layout ─────────────────────────────────────── */
+        .booking-page {
+            max-width: 1060px; margin: 26px auto 60px; padding: 0 24px;
+            display: grid; grid-template-columns: 1fr 390px; gap: 26px; align-items: start;
+        }
+
+        /* ── Shared Card ─────────────────────────────────────── */
+        .bk-card {
+            background: rgba(18,18,34,0.88); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 22px; overflow: hidden; margin-bottom: 18px;
+        }
+        .bk-card-header {
+            padding: 18px 26px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .bk-card-header i { color: #6366f1; font-size: 1rem; }
+        .bk-card-header h2 { font-size: 1rem; font-weight: 700; color: #e2e8f0; }
+        .bk-card-body { padding: 24px 26px; }
+
+        /* ── Back Link ───────────────────────────────────────── */
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: #718096; text-decoration: none; font-size: 0.84rem; margin-bottom: 18px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #a0aec0; }
+
+        /* ── Error Banner ────────────────────────────────────── */
+        .error-banner {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.28);
+            border-radius: 12px; padding: 14px 18px; color: #fca5a5; font-size: 0.9rem;
+            margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+        }
+
+        /* ── Guest Form ──────────────────────────────────────── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-label {
+            font-size: 0.77rem; font-weight: 700; color: #a0aec0;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-input {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 12px; padding: 12px 16px; color: #fff; font-size: 0.93rem;
+            font-family: 'Outfit', sans-serif; width: 100%; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            outline: none; border-color: rgba(99,102,241,0.55);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        .form-input::placeholder { color: rgba(255,255,255,0.2); }
+        .email-note {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.76rem; color: #6ee7b7; margin-top: 3px;
+        }
+
+        /* ── Info note ───────────────────────────────────────── */
+        .info-note {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 12px; padding: 12px 16px; font-size: 0.82rem; color: #a5b4fc;
+            margin-top: 18px;
+        }
+        .info-note i { margin-top: 1px; flex-shrink: 0; color: #6366f1; }
+
+        /* ── Confirm Button ──────────────────────────────────── */
+        .confirm-btn {
+            width: 100%; background: linear-gradient(135deg, #10b981, #059669);
+            color: white; border: none; border-radius: 14px; padding: 16px;
+            font-size: 1rem; font-weight: 700; font-family: 'Outfit', sans-serif;
+            cursor: pointer; transition: all 0.25s;
+            box-shadow: 0 4px 18px rgba(16,185,129,0.35); margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .confirm-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(16,185,129,0.5); }
+        .confirm-btn:active { transform: translateY(0); }
+        .confirm-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+        /* ── Price Summary (right column) ────────────────────── */
+        .price-summary-card { position: sticky; top: 90px; }
+
+        /* Hotel mini info */
+        .hotel-mini {
+            display: flex; gap: 14px; align-items: center; margin-bottom: 18px;
+        }
+        .hotel-mini-photo {
+            width: 70px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0;
+            background: linear-gradient(135deg,#1e1e38,#2d2d50);
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.2); font-size: 1.6rem; overflow: hidden;
+        }
+        .hotel-mini-photo img { width: 100%; height: 100%; object-fit: cover; }
+        .hotel-mini-name { font-weight: 700; color: #e2e8f0; font-size: 0.95rem; line-height: 1.3; margin-bottom: 3px; }
+        .hotel-mini-meta { font-size: 0.78rem; color: #718096; }
+
+        /* Price rows */
+        .price-row {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.86rem; color: #a0aec0;
+        }
+        .price-row:last-of-type { border-bottom: none; }
+        .price-row .val { color: #e2e8f0; font-weight: 500; text-align: right; }
+        .price-total-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 0 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px;
+        }
+        .price-total-label { font-size: 0.95rem; font-weight: 600; color: #e2e8f0; }
+        .price-total-value { font-size: 1.55rem; font-weight: 800; color: #10b981; }
+
+        .security-note {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.14);
+            border-radius: 10px; padding: 11px 14px; font-size: 0.79rem; color: #6ee7b7; margin-top: 18px;
+        }
+        .security-note i { color: #10b981; flex-shrink: 0; }
+
+        /* ── Responsive ──────────────────────────────────────── */
+        @media (max-width: 860px) {
+            .booking-page { grid-template-columns: 1fr; }
+            .price-summary-card { position: static; }
+        }
+        @media (max-width: 560px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="/" class="app-logo">
+                <div class="logo-icon"><i class="fa-solid fa-paper-plane"></i></div>
+                <span class="logo-text">Aero<span>Travel</span></span>
+            </a>
+            <div class="header-actions">
+                <a href="javascript:history.back()" class="login-btn" style="text-decoration:none;">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-wrap">
+        <div class="step done">
+            <div class="step-num"><i class="fa-solid fa-check" style="font-size:0.7rem;"></i></div>
+            <span>Search</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step done">
+            <div class="step-num"><i class="fa-solid fa-check" style="font-size:0.7rem;"></i></div>
+            <span>Browse Hotels</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step done">
+            <div class="step-num"><i class="fa-solid fa-check" style="font-size:0.7rem;"></i></div>
+            <span>Select Room</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step active">
+            <div class="step-num">4</div>
+            <span>Your Details</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-num">5</div>
+            <span>Confirm</span>
+        </div>
+    </div>
+
+    <div class="booking-page">
+
+        <!-- LEFT: Guest Form -->
+        <div>
+            <a href="javascript:history.back()" class="back-link">
+                <i class="fa-solid fa-chevron-left"></i> Back to room selection
+            </a>
+
+            <!-- Error Banner -->
+            <div class="error-banner" th:if="${error}">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span th:text="${error}">An error occurred.</span>
+            </div>
+
+            <!-- Guest Details Card -->
+            <div class="bk-card">
+                <div class="bk-card-header">
+                    <i class="fa-solid fa-user-pen"></i>
+                    <h2>Guest Details</h2>
+                </div>
+                <div class="bk-card-body">
+                    <form id="booking-form" action="/hotels/confirm" method="post">
+                        <!-- Hidden booking context -->
+                        <input type="hidden" name="offerId"      th:value="${offerId}">
+                        <input type="hidden" name="hotelId"      th:value="${hotelId}">
+                        <input type="hidden" name="hotelName"    th:value="${hotelName}">
+                        <input type="hidden" name="hotelAddress" th:value="${hotelAddress}">
+                        <input type="hidden" name="checkIn"      th:value="${checkIn}">
+                        <input type="hidden" name="checkOut"     th:value="${checkOut}">
+                        <input type="hidden" name="price"        th:value="${price}">
+                        <input type="hidden" name="currency"     th:value="${currency}">
+                        <input type="hidden" name="roomName"     th:value="${roomName}">
+                        <input type="hidden" name="boardName"    th:value="${boardName}">
+                        <input type="hidden" name="adults"       th:value="${adults}">
+                        <input type="hidden" name="rooms"        th:value="${rooms}">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName"
+                                       class="form-input" placeholder="Enter first name" required autocomplete="given-name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName"
+                                       class="form-input" placeholder="Enter last name" required autocomplete="family-name">
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="form-label" for="email">Email Address</label>
+                                <input type="email" id="email" name="email"
+                                       class="form-input" placeholder="your@email.com" required autocomplete="email">
+                                <span class="email-note" id="email-autofill-note" style="display:none;">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    Auto-filled from your account — you can change it
+                                </span>
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="form-label" for="phone">Phone Number <span style="color:#4a5568;font-weight:400;">(optional)</span></label>
+                                <input type="tel" id="phone" name="phone"
+                                       class="form-input" placeholder="+91 98765 43210" autocomplete="tel">
+                            </div>
+                        </div>
+
+                        <div class="info-note">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Your booking confirmation will be sent to the email address provided above. Make sure it is correct.</span>
+                        </div>
+
+                        <button type="submit" class="confirm-btn" id="confirm-booking-btn">
+                            <i class="fa-solid fa-check-circle"></i> Confirm &amp; Book
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Price Summary -->
+        <div class="price-summary-card">
+            <div class="bk-card">
+                <div class="bk-card-header">
+                    <i class="fa-solid fa-receipt"></i>
+                    <h2>Booking Summary</h2>
+                </div>
+                <div class="bk-card-body">
+
+                    <!-- Hotel mini -->
+                    <div class="hotel-mini">
+                        <div class="hotel-mini-photo">
+                            <img th:if="${photoUrl != null and !photoUrl.isBlank()}"
+                                 th:src="${photoUrl}" alt="Hotel"
+                                 onerror="this.parentElement.innerHTML='<i class=\'fa-solid fa-hotel\'></i>'">
+                            <i th:unless="${photoUrl != null and !photoUrl.isBlank()}" class="fa-solid fa-hotel"></i>
+                        </div>
+                        <div>
+                            <div class="hotel-mini-name" th:text="${hotelName}">Hotel Name</div>
+                            <div class="hotel-mini-meta" th:text="${roomName}">Room Type</div>
+                            <div class="hotel-mini-meta" th:text="${boardName}">Meal Plan</div>
+                        </div>
+                    </div>
+
+                    <!-- Price rows -->
+                    <div class="price-row">
+                        <span><i class="fa-solid fa-calendar-check" style="color:#6366f1;margin-right:5px;"></i> Check-in</span>
+                        <span class="val" th:text="${checkIn}">—</span>
+                    </div>
+                    <div class="price-row">
+                        <span><i class="fa-solid fa-calendar-day" style="color:#6366f1;margin-right:5px;"></i> Check-out</span>
+                        <span class="val" th:text="${checkOut}">—</span>
+                    </div>
+                    <div class="price-row">
+                        <span><i class="fa-solid fa-user-group" style="color:#6366f1;margin-right:5px;"></i> Guests</span>
+                        <span class="val"
+                              th:text="${adults} + ' Adult' + (${adults} > 1 ? 's' : '') + ', ' + ${rooms} + ' Room' + (${rooms} > 1 ? 's' : '')">
+                            2 Adults, 1 Room
+                        </span>
+                    </div>
+                    <div class="price-row">
+                        <span><i class="fa-solid fa-utensils" style="color:#6366f1;margin-right:5px;"></i> Meal plan</span>
+                        <span class="val" th:text="${boardName}">Room Only</span>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="price-total-row">
+                        <span class="price-total-label">Total (incl. taxes)</span>
+                        <span class="price-total-value" th:text="${formattedPrice}">₹0</span>
+                    </div>
+
+                    <div class="security-note">
+                        <i class="fa-solid fa-lock"></i>
+                        Sandbox booking — no real charges are applied.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase: auto-fill email -->
+    <script type="module">
+        import { auth, onAuthStateChanged } from '/js/firebase-config.js';
+        const emailInput = document.getElementById('email');
+        const emailNote  = document.getElementById('email-autofill-note');
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email) {
+                emailInput.value = user.email;
+                if (emailNote) emailNote.style.display = 'flex';
+            }
+        });
+    </script>
+
+    <!-- Loading state on submit -->
+    <script>
+        document.getElementById('booking-form').addEventListener('submit', function() {
+            const btn = document.getElementById('confirm-booking-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+        });
+    </script>
+
+</body>
+</html>
