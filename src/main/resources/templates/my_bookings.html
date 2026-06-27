@@ -98,7 +98,7 @@
                     <div class="bi-ref">Ref: <span th:text="${b.bookingRef}"></span></div>
                 </div>
                 <div class="bi-right">
-                    <div class="bi-price" th:text="${b.formattedPrice()}">₹—</div>
+                    <div class="bi-price" th:text="${b.formattedPrice}">₹—</div>
                     <div class="bi-status">
                         <span th:class="'status-badge status-' + ${b.status.name().toLowerCase()}"
                               th:text="${b.status.name()}">CONFIRMED</span>

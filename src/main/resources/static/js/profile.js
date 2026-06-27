@@ -1,4 +1,4 @@
-import { auth, db, onAuthStateChanged, doc, getDoc, setDoc, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from './firebase-config.js';
+import { auth, db, onAuthStateChanged, doc, getDoc, setDoc, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider, collection, getDocs, query, orderBy } from './firebase-config.js';
 
 // Mock Bookings Data
 const MOCK_FLIGHTS = [
@@ -55,37 +55,103 @@ const MOCK_FLIGHTS = [
     }
 ];
 
-const MOCK_HOTELS = [
-    {
-        id: "HT-204859",
-        hotelName: "The Taj Mahal Palace",
-        stars: 5,
-        location: "Mumbai, India",
-        checkIn: "Jun 30, 2026",
-        checkOut: "Jul 03, 2026",
-        nights: 3,
-        roomType: "Luxury Sea View Suite",
-        guests: "2 Guests, 1 Room",
-        price: "₹74,999",
-        status: "upcoming"
-    },
-    {
-        id: "HT-183049",
-        hotelName: "Marriott Goa Resort & Spa",
-        stars: 5,
-        location: "Goa, India",
-        checkIn: "Jan 12, 2026",
-        checkOut: "Jan 16, 2026",
-        nights: 4,
-        roomType: "Deluxe Garden View Room",
-        guests: "2 Guests, 1 Room",
-        price: "₹38,200",
-        status: "completed"
-    }
-];
+// No mock hotel data — always show real Firestore bookings
 
 let currentCategory = 'flights'; // 'flights' or 'hotels'
 let currentTimeFilter = 'upcoming'; // 'upcoming' or 'completed'
+let hotelBookings = []; // Will be populated from Firestore
+let bookingsLoaded = false; // Track whether Firestore fetch is complete
+
+// Load real hotel bookings from local backend database
+async function loadRealBookings(user) {
+    // Show loading skeleton in the hotels list
+    const listHotels = document.getElementById('list-hotels');
+    if (listHotels) {
+        listHotels.querySelector('.empty-state').style.display = 'none';
+        const existingLoader = listHotels.querySelector('.bookings-loading');
+        if (!existingLoader) {
+            const loader = document.createElement('div');
+            loader.className = 'bookings-loading';
+            loader.innerHTML = `
+                <div style="text-align:center;padding:48px 24px;">
+                    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:rgba(99,102,241,0.6);margin-bottom:16px;display:block;"></i>
+                    <p style="color:#718096;font-size:0.9rem;">Loading your bookings…</p>
+                </div>`;
+            listHotels.appendChild(loader);
+        }
+    }
+
+    try {
+        const response = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const dataList = await response.json();
+        console.log('[AZ] Loaded bookings from backend:', dataList);
+        
+        const realHotels = [];
+        dataList.forEach((data) => {
+            if (data.hotelId) {
+                // Determine status (upcoming vs completed) based on checkOut date
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Parse date locally to prevent UTC timezone shift issues
+                const parseLocalDate = (dateStr) => {
+                    if (!dateStr) return new Date();
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    }
+                    return new Date(dateStr);
+                };
+                
+                const checkInDate = parseLocalDate(data.checkIn);
+                const checkOutDateObj = parseLocalDate(data.checkOut);
+                const status = (checkOutDateObj < today) ? 'completed' : 'upcoming';
+
+                // Format dates for display (e.g. "Jun 30, 2026")
+                const options = { month: 'short', day: '2-digit', year: 'numeric' };
+                const checkInFormatted = checkInDate.toLocaleDateString('en-US', options);
+                const checkOutFormatted = checkOutDateObj.toLocaleDateString('en-US', options);
+
+                const nights = Math.max(1, Math.round((checkOutDateObj - checkInDate) / (1000 * 60 * 60 * 24)));
+                
+                const priceSymbol = "INR" === data.currency ? "₹" : data.currency + " ";
+                const formattedPrice = `${priceSymbol}${Number(data.totalPrice).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+
+                realHotels.push({
+                    id: data.bookingRef,
+                    hotelName: data.hotelName,
+                    stars: 5, // Fallback default stars
+                    location: data.hotelAddress || '',
+                    checkIn: checkInFormatted,
+                    checkOut: checkOutFormatted,
+                    nights: nights,
+                    roomType: data.roomName,
+                    boardName: data.boardName || '',
+                    guests: `${data.adults} Guest${data.adults > 1 ? 's' : ''}, ${data.rooms} Room${data.rooms > 1 ? 's' : ''}`,
+                    price: formattedPrice,
+                    bookingRef: data.bookingRef,
+                    status: status
+                });
+            }
+        });
+
+        // Always use real data (even if empty — shows proper empty state)
+        hotelBookings = realHotels;
+        bookingsLoaded = true;
+    } catch (e) {
+        console.error("Error loading real bookings from backend:", e);
+        bookingsLoaded = true;
+    } finally {
+        // Remove loader
+        if (listHotels) {
+            const loader = listHotels.querySelector('.bookings-loading');
+            if (loader) loader.remove();
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Auth Listener
@@ -97,6 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set passenger name in mock bookings to matching display name
             const userName = user.displayName || 'Guest';
             MOCK_FLIGHTS.forEach(f => f.passenger = userName);
+            
+            // Load real bookings from Firestore
+            await loadRealBookings(user);
             
             // Render default view
             renderBookings();
@@ -395,7 +464,7 @@ function renderBookings() {
         }
     } else {
         clearList(listHotels);
-        const filtered = MOCK_HOTELS.filter(h => h.status === currentTimeFilter);
+        const filtered = hotelBookings.filter(h => h.status === currentTimeFilter);
         const emptyState = listHotels.querySelector('.empty-state');
 
         if (filtered.length === 0) {
@@ -421,7 +490,7 @@ function renderBookings() {
                             </div>
                         </div>
                         <div class="booking-meta">
-                            <span class="booking-id">ID: <strong>${hotel.id}</strong></span>
+                            <span class="booking-id">Ref: <strong>${hotel.id}</strong></span>
                             <span class="status-badge badge-${hotel.status}">${hotel.status.toUpperCase()}</span>
                         </div>
                     </div>
@@ -430,10 +499,10 @@ function renderBookings() {
                         <div class="stay-point">
                             <span>Check-in</span>
                             <h3>${hotel.checkIn}</h3>
-                            <p class="location-label"><i class="fa-solid fa-location-dot"></i> ${hotel.location}</p>
+                            <p class="location-label"><i class="fa-solid fa-location-dot"></i> ${hotel.location || 'Hotel location'}</p>
                         </div>
                         <div class="stay-duration">
-                            <span class="duration-nights">${hotel.nights} Nights</span>
+                            <span class="duration-nights">${hotel.nights} Night${hotel.nights !== 1 ? 's' : ''}</span>
                             <div class="path-line">
                                 <span class="dot"></span>
                                 <i class="fa-solid fa-moon"></i>
@@ -443,7 +512,7 @@ function renderBookings() {
                         <div class="stay-point text-right">
                             <span>Check-out</span>
                             <h3>${hotel.checkOut}</h3>
-                            <p class="room-spec">${hotel.roomType}</p>
+                            <p class="room-spec">${hotel.roomType}${hotel.boardName ? ' · ' + hotel.boardName : ''}</p>
                         </div>
                     </div>
 
@@ -453,8 +522,8 @@ function renderBookings() {
                             <p>${hotel.guests}</p>
                         </div>
                         <div class="info-block">
-                            <span>Status Details</span>
-                            <p>${hotel.status === 'upcoming' ? 'Confirmed & Guaranteed' : 'Stay Completed'}</p>
+                            <span>Booking Status</span>
+                            <p>${hotel.status === 'upcoming' ? 'Confirmed ✓' : 'Stay Completed'}</p>
                         </div>
                         <div class="info-block text-right">
                             <span>Total Paid</span>

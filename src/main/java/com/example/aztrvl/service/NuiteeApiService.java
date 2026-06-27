@@ -233,6 +233,16 @@ public class NuiteeApiService {
     }
 
     // --------------------------------------------------------
+    // Clean up room names by removing numbers and indicators like ",1 X ", "1 X ", etc.
+    private String cleanRoomName(String roomName) {
+        if (roomName == null) return "Standard Room";
+        String cleaned = roomName.replaceAll("^(?i)[,\\s]*\\d+\\s*[xX]\\s*", "").trim();
+        if (!cleaned.isEmpty()) {
+            cleaned = cleaned.substring(0, 1).toUpperCase() + cleaned.substring(1);
+        }
+        return cleaned.isEmpty() ? roomName : cleaned;
+    }
+
     // Get all room rates for a single hotel (hotel detail page)
     // --------------------------------------------------------
     public List<HotelRoomRate> getHotelRates(String hotelId, String checkIn, String checkOut,
@@ -262,6 +272,9 @@ public class NuiteeApiService {
                     String.class
             );
 
+            // Group and keep only the cheapest option for the same room configuration
+            Map<String, HotelRoomRate> cheapestRates = new LinkedHashMap<>();
+
             JsonNode root = objectMapper.readTree(response.getBody());
             JsonNode dataNode = root.path("data");
             if (dataNode.isArray() && !dataNode.isEmpty()) {
@@ -273,34 +286,52 @@ public class NuiteeApiService {
                         JsonNode rates = roomType.path("rates");
                         if (rates.isArray()) {
                             for (JsonNode rate : rates) {
-                                HotelRoomRate r = new HotelRoomRate();
-                                r.setOfferId(offerId);
-                                r.setRoomName(rate.path("name").asText("Standard Room"));
-                                r.setBoardName(rate.path("boardName").asText("Room Only"));
-                                
+                                String rawRoomName = rate.path("name").asText("Standard Room");
+                                String roomName = cleanRoomName(rawRoomName);
+                                String boardName = rate.path("boardName").asText("Room Only");
                                 String refTag = rate.path("cancellationPolicies").path("refundableTag").asText("");
-                                r.setRefundable("RFN".equalsIgnoreCase(refTag));
+                                boolean refundable = "RFN".equalsIgnoreCase(refTag);
 
+                                double price = 0;
+                                String rateCurrency = currency;
                                 JsonNode total = rate.path("retailRate").path("total");
                                 if (total.isArray() && !total.isEmpty()) {
-                                    r.setPrice(total.get(0).path("amount").asDouble(0));
-                                    r.setCurrency(total.get(0).path("currency").asText(currency));
+                                    price = total.get(0).path("amount").asDouble(0);
+                                    rateCurrency = total.get(0).path("currency").asText(currency);
                                 }
 
-                                if (r.isRefundable()) {
-                                    r.setCancellationPolicy("Free cancellation");
-                                } else {
-                                    r.setCancellationPolicy("Non-refundable");
+                                if (offerId.isBlank() || price <= 0) {
+                                    continue;
                                 }
 
-                                if (!r.getOfferId().isBlank()) {
-                                    result.add(r);
+                                String key = (roomName + "|" + boardName + "|" + refundable).toLowerCase();
+                                
+                                HotelRoomRate existing = cheapestRates.get(key);
+                                if (existing == null || price < existing.getPrice()) {
+                                    HotelRoomRate r = new HotelRoomRate();
+                                    r.setOfferId(offerId);
+                                    r.setRoomName(roomName);
+                                    r.setBoardName(boardName);
+                                    r.setRefundable(refundable);
+                                    r.setPrice(price);
+                                    r.setCurrency(rateCurrency);
+                                    
+                                    if (refundable) {
+                                        r.setCancellationPolicy("Free cancellation");
+                                    } else {
+                                        r.setCancellationPolicy("Non-refundable");
+                                    }
+                                    
+                                    cheapestRates.put(key, r);
                                 }
                             }
                         }
                     }
                 }
             }
+            
+            result.addAll(cheapestRates.values());
+            
         } catch (Exception e) {
             log.error("Error fetching hotel rates for hotelId={}: {}", hotelId, e.getMessage(), e);
         }

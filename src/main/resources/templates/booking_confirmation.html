@@ -249,7 +249,7 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Total Paid</div>
-                        <div class="detail-value accent" th:text="${booking.formattedPrice()}">—</div>
+                        <div class="detail-value accent" th:text="${booking.formattedPrice}">—</div>
                     </div>
                 </div>
             </div>
@@ -263,7 +263,7 @@
                 <div class="details-grid">
                     <div class="detail-item">
                         <div class="detail-label">Guest Name</div>
-                        <div class="detail-value" th:text="${booking.guestFullName()}">—</div>
+                        <div class="detail-value" th:text="${booking.guestFullName}">—</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Email</div>
@@ -285,9 +285,16 @@
                 <a href="/" class="cta-btn cta-primary">
                     <i class="fa-solid fa-magnifying-glass"></i> Search More Hotels
                 </a>
-                <a th:href="@{/my-bookings(email=${booking.guestEmail})}" class="cta-btn cta-secondary">
-                    <i class="fa-solid fa-list-check"></i> View All Bookings
+                <a href="/profile?tab=bookings" class="cta-btn cta-secondary">
+                    <i class="fa-solid fa-list-check"></i> View My Bookings
                 </a>
+            </div>
+
+            <!-- Firestore sync status -->
+            <div style="text-align:center; padding: 0 36px 22px;">
+                <span id="firestore-sync-badge" style="font-size:0.75rem; color:#4a5568;">
+                    <i class="fa-solid fa-spinner fa-spin" style="margin-right:5px;"></i> Syncing to your account...
+                </span>
             </div>
 
         </div>
@@ -309,6 +316,70 @@
                 setTimeout(() => { btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy'; }, 2000);
             });
         }
+    </script>
+
+    <script th:inline="javascript">
+        // Use window. so this is accessible from ES module scripts
+        window.currentBooking = {
+            bookingRef: /*[[${booking.bookingRef}]]*/ '',
+            nuiteeBookingId: /*[[${booking.nuiteeBookingId}]]*/ '',
+            hotelId: /*[[${booking.hotelId}]]*/ '',
+            hotelName: /*[[${booking.hotelName}]]*/ '',
+            hotelAddress: /*[[${booking.hotelAddress}]]*/ '',
+            checkIn: /*[[${#temporals.format(booking.checkIn, 'yyyy-MM-dd')}]]*/ '',
+            checkOut: /*[[${#temporals.format(booking.checkOut, 'yyyy-MM-dd')}]]*/ '',
+            guestFirstName: /*[[${booking.guestFirstName}]]*/ '',
+            guestLastName: /*[[${booking.guestLastName}]]*/ '',
+            guestEmail: /*[[${booking.guestEmail}]]*/ '',
+            adults: parseInt(/*[[${booking.adults}]]*/ '2'),
+            rooms: parseInt(/*[[${booking.rooms}]]*/ '1'),
+            totalPrice: parseFloat(/*[[${booking.totalPrice}]]*/ '0'),
+            currency: /*[[${booking.currency}]]*/ 'INR',
+            roomName: /*[[${booking.roomName}]]*/ '',
+            boardName: /*[[${booking.boardName}]]*/ '',
+            status: /*[[${booking.status.name()}]]*/ 'CONFIRMED',
+            createdAt: /*[[${#temporals.format(booking.createdAt, 'yyyy-MM-dd\'T\'HH:mm:ss')}]]*/ ''
+        };
+        console.log('[AZ] currentBooking set on window:', window.currentBooking.bookingRef);
+    </script>
+
+    <!-- Firebase Firestore Sync -->
+    <script type="module">
+        import { auth, db, onAuthStateChanged, doc, setDoc } from '/js/firebase-config.js';
+
+        onAuthStateChanged(auth, async (user) => {
+            const booking = window.currentBooking;
+            console.log('[AZ] Auth state changed. User:', user ? user.uid : 'NOT LOGGED IN', '| Booking ref:', booking ? booking.bookingRef : 'N/A');
+
+            if (user && booking && booking.bookingRef) {
+                try {
+                    const docRef = doc(db, 'users', user.uid, 'bookings', booking.bookingRef);
+                    await setDoc(docRef, {
+                        ...booking,
+                        uid: user.uid,
+                        savedAt: new Date().toISOString()
+                    }, { merge: true });
+                    console.log('[AZ] ✅ Booking saved to Firestore:', booking.bookingRef, 'for user:', user.uid);
+                    // Show sync badge in UI
+                    const syncBadge = document.getElementById('firestore-sync-badge');
+                    if (syncBadge) {
+                        syncBadge.innerHTML = '<i class="fa-solid fa-circle-check" style="margin-right:5px;color:#6ee7b7;"></i><span style="color:#6ee7b7;">Synced to your account</span>';
+                    }
+                } catch (e) {
+                    console.error('[AZ] ❌ Firestore save error:', e.code, e.message);
+                    const syncBadge = document.getElementById('firestore-sync-badge');
+                    if (syncBadge) {
+                        syncBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;color:#fcd34d;"></i><span style="color:#fcd34d;">Not synced — check Firestore rules (' + (e.code || e.message) + ')</span>';
+                    }
+                }
+            } else if (!user) {
+                console.warn('[AZ] User not logged in — booking will not be saved to Firestore.');
+                const syncBadge = document.getElementById('firestore-sync-badge');
+                if (syncBadge) {
+                    syncBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;color:#fcd34d;"></i><span style="color:#fcd34d;">Log in to save booking to your account</span>';
+                }
+            }
+        });
     </script>
 
 </body>

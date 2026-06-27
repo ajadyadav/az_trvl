@@ -534,6 +534,27 @@
         });
         cards.forEach(c => list.appendChild(c));
     }
+
+    // Make the entire hotel card clickable using event delegation
+    document.addEventListener('DOMContentLoaded', () => {
+        const list = document.getElementById('hotels-list');
+        if (list) {
+            list.addEventListener('click', (e) => {
+                const card = e.target.closest('.hotel-card');
+                if (!card) return;
+                
+                // Do not navigate if the user explicitly clicked a link or button
+                if (e.target.closest('a') || e.target.closest('button')) {
+                    return;
+                }
+                
+                const btn = card.querySelector('.view-rooms-btn');
+                if (btn && btn.getAttribute('href')) {
+                    window.location.href = btn.getAttribute('href');
+                }
+            });
+        }
+    });
     </script>
 
 </body>

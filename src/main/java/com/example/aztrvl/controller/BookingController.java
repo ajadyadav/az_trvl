@@ -119,4 +119,14 @@ public class BookingController {
         model.addAttribute("email", email);
         return "my_bookings";
     }
+
+    // --------------------------------------------------------
+    // GET /api/bookings — JSON list of bookings by email
+    // --------------------------------------------------------
+    @GetMapping("/api/bookings")
+    @ResponseBody
+    public List<HotelBooking> getBookingsApi(@RequestParam String email) {
+        log.info("API request: Fetching bookings for email={}", email);
+        return bookingService.getByEmail(email);
+    }
 }
